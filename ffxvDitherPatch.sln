@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ffxvDitherPatch", "ffxvDitherPatch\ffxvDitherPatch.csproj", "{5664E8BD-9627-4216-9A75-16B058968D8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5664E8BD-9627-4216-9A75-16B058968D8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5664E8BD-9627-4216-9A75-16B058968D8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5664E8BD-9627-4216-9A75-16B058968D8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5664E8BD-9627-4216-9A75-16B058968D8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EC70D7B3-EF36-46D2-AC7E-2B387F492078}
+	EndGlobalSection
+EndGlobal
