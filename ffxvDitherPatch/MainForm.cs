@@ -31,9 +31,11 @@ namespace ffxvDitherPatch
             processButton.Enabled = false;
 
             progressBar.Value = 0;
+            progressBar.Maximum = _patcher.CandidateCount();
             await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering);
 
             progressBar.Value = 0;
+            progressBar.Maximum = _archive.Count();
             await _archive.SaveAsync("patchedShaders.earc", new Progress<int>(UpdateProgressBar));
 
             //await _patcher.DumpDiscardPsAsync(new Progress<int>(UpdateProgressBar));
