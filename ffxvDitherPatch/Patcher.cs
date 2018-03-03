@@ -18,7 +18,8 @@ namespace ffxvDitherPatch
         //    0x00000468: ult r0.x, r0.y, r0.x            4F 00 00 07 | 12 00 10 00 | 00 00 00 00 | 1A 00 10 00 | 00 00 00 00 | 0A 00 10 00 | 00 00 00 00
         //    0x00000484: discard_z r0.x                  0D 00 00 03 | 0A 00 10 00 | 00 00 00 00
 
-        private const string discard_z_sig = "0D 00 00 03 ?? 00 ?? 00 00 00 00 00";
+        // private const string discard_z_sig = "0D 00 00 03 ?? 00 ?? 00 00 00 00 00";
+
         private const string block_sig =
             "38 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? ?? ?? 00 ?? 00 00 00 ?? ?? 00 00 00 00 80 41" +
             "40 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
@@ -26,6 +27,7 @@ namespace ffxvDitherPatch
             "4F 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
             "0D 00 00 03 ?? 00 ?? 00 ?? 00 00 00";
         private const int block_float_offset = 6 * 4;
+        private const int block_discard_offset = (7 + 5 + 5 + 7) * 4;
         private const string block2_sig =
             "38 00 00 08 ?? 00 ?? 00 00 00 00 00 ?? ?? ?? 00 ?? 00 00 00 ?? 00 00 00 ?? ?? 00 00 00 00 80 41" +
             "40 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
@@ -33,6 +35,8 @@ namespace ffxvDitherPatch
             "4F 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
             "0D 00 00 03 ?? 00 ?? 00 ?? 00 00 00";
         private const int block2_float_offset = 7 * 4;
+        private const int block2_discard_offset = (8 + 5 + 5 + 7) * 4;
+
         private static readonly byte[] block_float_replacement = BitConverter.GetBytes(48.0f);
 
         private static readonly byte[] nop_12x = { 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01 };
@@ -48,9 +52,10 @@ namespace ffxvDitherPatch
                 for (var i = 0; i < _archive.Count(); i++)
                 {
                     var vfsPath = _archive.VfsPath(i);
+                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+
                     if (vfsPath.EndsWith(".ps.sb"))
                     {
-                        string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
                         string outputPath = "shaderDump/" + filename;
 
                         var binary = _archive.Get(i);
@@ -73,7 +78,9 @@ namespace ffxvDitherPatch
                 for (var i = 0; i < _archive.Count(); i++)
                 {
                     var vfsPath = _archive.VfsPath(i);
-                    if (vfsPath.EndsWith(".ps.sb"))
+                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+
+                    if (filename.EndsWith(".ps.sb") && filename.StartsWith("g_buffer"))
                     {
                         var binary = _archive.Get(i);
                         var disassembly = D3DCompiler.Disassemble(binary);
@@ -84,9 +91,15 @@ namespace ffxvDitherPatch
                             bool found = false;
                             byte[] newBinary = (byte[])binary.Clone();
 
-                            foreach (var pos in binary.SigScan(discard_z_sig))
+                            foreach (var pos in binary.SigScan(block_sig))
                             {
-                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos, 12);
+                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
+                                found = true;
+                            }
+
+                            foreach (var pos in binary.SigScan(block2_sig))
+                            {
+                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
                                 found = true;
                             }
 
@@ -112,7 +125,9 @@ namespace ffxvDitherPatch
                 for (var i = 0; i < _archive.Count(); i++)
                 {
                     var vfsPath = _archive.VfsPath(i);
-                    if (vfsPath.EndsWith(".ps.sb"))
+                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+
+                    if (filename.EndsWith(".ps.sb") && filename.StartsWith("g_buffer"))
                     {
                         var binary = _archive.Get(i);
                         var disassembly = D3DCompiler.Disassemble(binary);
@@ -142,7 +157,6 @@ namespace ffxvDitherPatch
                             }
                             else
                             {
-                                string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
                                 string outputPath = "missedShaderDump/" + filename;
                                 File.WriteAllBytes(outputPath, binary);
                                 File.WriteAllText(outputPath + ".lst", disassembly);
