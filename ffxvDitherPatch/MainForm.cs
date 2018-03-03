@@ -31,7 +31,7 @@ namespace ffxvDitherPatch
             processButton.Enabled = false;
 
             progressBar.Value = 0;
-            await _patcher.NarrowDitheringAsync(new Progress<int>(UpdateProgressBar));
+            await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering);
 
             progressBar.Value = 0;
             await _archive.SaveAsync("patchedShaders.earc", new Progress<int>(UpdateProgressBar));

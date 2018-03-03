@@ -9,7 +9,14 @@ namespace ffxvDitherPatch
 {
     class Patcher
     {
+        public enum PatchMode
+        {
+            DisableDithering,
+            NarrowDithering
+        }
+
         private Craf _archive;
+        private List<int> _candidateIds;
 
         // Example:
         //    0x00000424: mul r0.x, r0.x, l(16.000000)    38 00 00 07 | 12 00 10 00 | 00 00 00 00 | 0A 00 10 00 | 00 00 00 00 | 01 40 00 00 | 00 00 80 41
@@ -19,6 +26,11 @@ namespace ffxvDitherPatch
         //    0x00000484: discard_z r0.x                  0D 00 00 03 | 0A 00 10 00 | 00 00 00 00
 
         // private const string discard_z_sig = "0D 00 00 03 ?? 00 ?? 00 00 00 00 00";
+
+        // The signatures below don't cover *all* shaders containing a dither pattern.
+        // If we make the signatures too loose, the game will fail to load.
+        // TODO fix
+        // (Though they do seem to cover all instances of discard_z inside g_buffer)
 
         private const string block_sig =
             "38 00 00 07 ?? 00 ?? 00 ?? 00 00 00 ?? ?? ?? 00 ?? 00 00 00 ?? ?? 00 00 00 00 80 41" +
@@ -41,7 +53,18 @@ namespace ffxvDitherPatch
 
         private static readonly byte[] nop_12x = { 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01 };
 
-        public Patcher(Craf archive) { _archive = archive; }
+        public Patcher(Craf archive) {
+            _archive = archive;
+            _candidateIds = new List<int>();
+
+            for (var i = 0; i < _archive.Count(); i++)
+            {
+                var filename = _archive.VfsFilename(i);
+                if (filename.StartsWith("g_buffer") && filename.EndsWith(".ps.sb")) _candidateIds.Add(i);
+            }
+        }
+
+        public int CandidateCount() { return _candidateIds.Count; }
 
         public Task DumpDiscardPsAsync(IProgress<int> progress)
         {
@@ -49,118 +72,74 @@ namespace ffxvDitherPatch
             {
                 if (!Directory.Exists("shaderDump")) Directory.CreateDirectory("shaderDump");
 
-                for (var i = 0; i < _archive.Count(); i++)
+                for (var i = 0; i < _candidateIds.Count; i++)
                 {
-                    var vfsPath = _archive.VfsPath(i);
-                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+                    var id = _candidateIds[i];
 
-                    if (vfsPath.EndsWith(".ps.sb"))
+                    var filename = _archive.VfsFilename(id);
+                    var outputPath = "shaderDump/" + filename;
+
+                    var binary = _archive.Get(id);
+                    var disassembly = D3DCompiler.Disassemble(binary);
+
+                    if (disassembly.Contains("discard_z"))
                     {
-                        string outputPath = "shaderDump/" + filename;
-
-                        var binary = _archive.Get(i);
-                        var disassembly = D3DCompiler.Disassemble(binary);
-
-                        if (disassembly.Contains("discard_z"))
-                        {
-                            File.WriteAllBytes(outputPath, binary);
-                            File.WriteAllText(outputPath + ".lst", disassembly);
-                        }
-                    }
-                    progress.Report(i + 1);
-                }
-            });
-        }
-        public Task DisableDitheringAsync(IProgress<int> progress)
-        {
-            return Task.Run(() =>
-            {
-                for (var i = 0; i < _archive.Count(); i++)
-                {
-                    var vfsPath = _archive.VfsPath(i);
-                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
-
-                    if (filename.EndsWith(".ps.sb") && filename.StartsWith("g_buffer"))
-                    {
-                        var binary = _archive.Get(i);
-                        var disassembly = D3DCompiler.Disassemble(binary);
-
-                        // TODO improve
-                        if (disassembly.Contains("discard_z"))
-                        {
-                            bool found = false;
-                            byte[] newBinary = (byte[])binary.Clone();
-
-                            foreach (var pos in binary.SigScan(block_sig))
-                            {
-                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
-                                found = true;
-                            }
-
-                            foreach (var pos in binary.SigScan(block2_sig))
-                            {
-                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
-                                found = true;
-                            }
-
-                            if (found)
-                            {
-                                int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
-                                Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
-                                _archive.Replace(i, newBinary);
-                            }
-                        }
+                        File.WriteAllBytes(outputPath, binary);
+                        File.WriteAllText(outputPath + ".lst", disassembly);
                     }
                     progress.Report(i + 1);
                 }
             });
         }
 
-        public Task NarrowDitheringAsync(IProgress<int> progress)
+        public Task PatchAsync(IProgress<int> progress, PatchMode mode)
         {
-            if (!Directory.Exists("missedShaderDump")) Directory.CreateDirectory("missedShaderDump");
-
             return Task.Run(() =>
             {
-                for (var i = 0; i < _archive.Count(); i++)
+                for (var i = 0; i < _candidateIds.Count(); i++)
                 {
-                    var vfsPath = _archive.VfsPath(i);
-                    string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+                    var id = _candidateIds[i];
+                    var binary = _archive.Get(id);
+                    var disassembly = D3DCompiler.Disassemble(binary);
 
-                    if (filename.EndsWith(".ps.sb") && filename.StartsWith("g_buffer"))
+                    if (disassembly.Contains("discard_z"))
                     {
-                        var binary = _archive.Get(i);
-                        var disassembly = D3DCompiler.Disassemble(binary);
+                        bool found = false;
+                        byte[] newBinary = (byte[])binary.Clone();
 
-                        // TODO improve
-                        if (disassembly.Contains("discard_z"))
+                        foreach (var pos in binary.SigScan(block_sig))
                         {
-                            bool found = false;
-                            byte[] newBinary = (byte[])binary.Clone();
+                            switch(mode)
+                            {
+                                case PatchMode.DisableDithering:
+                                    Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
+                                    break;
+                                case PatchMode.NarrowDithering:
+                                    Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block_float_offset, 4);
+                                    break;
+                            }
+                            found = true;
+                        }
 
-                            foreach (var pos in binary.SigScan(block_sig))
+                        foreach (var pos in binary.SigScan(block2_sig))
+                        {
+                            switch (mode)
                             {
-                                Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block_float_offset, 4);
-                                found = true;
+                                case PatchMode.DisableDithering:
+                                    Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
+                                    break;
+                                case PatchMode.NarrowDithering:
+                                    Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block2_float_offset, 4);
+                                    break;
                             }
-                            foreach (var pos in binary.SigScan(block2_sig))
-                            {
-                                Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block2_float_offset, 4);
-                                found = true;
-                            }
+                            found = true;
+                        }
 
-                            if (found)
-                            {
-                                int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
-                                Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
-                                _archive.Replace(i, newBinary);
-                            }
-                            else
-                            {
-                                string outputPath = "missedShaderDump/" + filename;
-                                File.WriteAllBytes(outputPath, binary);
-                                File.WriteAllText(outputPath + ".lst", disassembly);
-                            }
+                        if (found)
+                        {
+                            int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
+                            Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
+                            _archive.Replace(id, newBinary);
                         }
                     }
                     progress.Report(i + 1);

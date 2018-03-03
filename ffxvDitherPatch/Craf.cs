@@ -266,6 +266,14 @@ namespace ffxvDitherPatch
             return _files[id].vfsPath;
         }
 
+        public string VfsFilename(int id)
+        {
+            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+
+            var vfsPath = VfsPath(id);
+            return vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+        }
+
         public byte[] Get(int id)
         {
             if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
