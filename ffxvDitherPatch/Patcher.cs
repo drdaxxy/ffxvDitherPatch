@@ -49,8 +49,6 @@ namespace ffxvDitherPatch
         private const int block2_float_offset = 7 * 4;
         private const int block2_discard_offset = (8 + 5 + 5 + 7) * 4;
 
-        private static readonly byte[] block_float_replacement = BitConverter.GetBytes(48.0f);
-
         private static readonly byte[] nop_12x = { 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01 };
 
         public Patcher(Craf archive) {
@@ -92,10 +90,12 @@ namespace ffxvDitherPatch
             });
         }
 
-        public Task PatchAsync(IProgress<int> progress, PatchMode mode)
+        public Task PatchAsync(IProgress<int> progress, PatchMode mode, float multiplier)
         {
             return Task.Run(() =>
             {
+                var _multiplier = BitConverter.GetBytes(multiplier);
+
                 for (var i = 0; i < _candidateIds.Count(); i++)
                 {
                     var id = _candidateIds[i];
@@ -115,7 +115,7 @@ namespace ffxvDitherPatch
                                     Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
                                     break;
                                 case PatchMode.NarrowDithering:
-                                    Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block_float_offset, 4);
+                                    Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block_float_offset, 4);
                                     break;
                             }
                             found = true;
@@ -129,7 +129,7 @@ namespace ffxvDitherPatch
                                     Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
                                     break;
                                 case PatchMode.NarrowDithering:
-                                    Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block2_float_offset, 4);
+                                    Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block2_float_offset, 4);
                                     break;
                             }
                             found = true;

@@ -32,7 +32,7 @@ namespace ffxvDitherPatch
 
             progressBar.Value = 0;
             progressBar.Maximum = _patcher.CandidateCount();
-            await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering);
+            await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 40.0f);
 
             progressBar.Value = 0;
             progressBar.Maximum = _archive.Count();
