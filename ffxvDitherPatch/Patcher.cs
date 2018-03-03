@@ -18,10 +18,22 @@ namespace ffxvDitherPatch
         //    0x00000468: ult r0.x, r0.y, r0.x            4F 00 00 07 | 12 00 10 00 | 00 00 00 00 | 1A 00 10 00 | 00 00 00 00 | 0A 00 10 00 | 00 00 00 00
         //    0x00000484: discard_z r0.x                  0D 00 00 03 | 0A 00 10 00 | 00 00 00 00
 
-        private static readonly byte[] discard_z_r0_x = { 0x0D, 0x00, 0x00, 0x03, 0x0A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        private static readonly byte[] discard_z_r0_y = { 0x0D, 0x00, 0x00, 0x03, 0x1A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        private static readonly byte[] discard_z_r0_z = { 0x0D, 0x00, 0x00, 0x03, 0x2A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        private static readonly byte[] discard_z_r0_w = { 0x0D, 0x00, 0x00, 0x03, 0x3A, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        private const string discard_z_sig = "0D 00 00 03 ?? 00 ?? 00 00 00 00 00";
+        private const string block_sig =
+            "38 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? ?? ?? 00 ?? 00 00 00 ?? ?? 00 00 00 00 80 41" +
+            "40 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "1C 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "4F 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "0D 00 00 03 ?? 00 ?? 00 ?? 00 00 00";
+        private const int block_float_offset = 6 * 4;
+        private const string block2_sig =
+            "38 00 00 08 ?? 00 ?? 00 00 00 00 00 ?? ?? ?? 00 ?? 00 00 00 ?? 00 00 00 ?? ?? 00 00 00 00 80 41" +
+            "40 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "1C 00 00 05 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "4F 00 00 07 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00" +
+            "0D 00 00 03 ?? 00 ?? 00 ?? 00 00 00";
+        private const int block2_float_offset = 7 * 4;
+        private static readonly byte[] block_float_replacement = BitConverter.GetBytes(48.0f);
 
         private static readonly byte[] nop_12x = { 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01 };
 
@@ -67,14 +79,14 @@ namespace ffxvDitherPatch
                         var disassembly = D3DCompiler.Disassemble(binary);
 
                         // TODO improve
-                        if (disassembly.Contains("discard_z r0.x"))
+                        if (disassembly.Contains("discard_z"))
                         {
                             bool found = false;
                             byte[] newBinary = (byte[])binary.Clone();
 
-                            foreach (var pos in binary.Locate(discard_z_r0_x))
+                            foreach (var pos in binary.SigScan(discard_z_sig))
                             {
-                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos, discard_z_r0_x.Length);
+                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos, 12);
                                 found = true;
                             }
 
@@ -83,6 +95,57 @@ namespace ffxvDitherPatch
                                 int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
                                 Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
                                 _archive.Replace(i, newBinary);
+                            }
+                        }
+                    }
+                    progress.Report(i + 1);
+                }
+            });
+        }
+
+        public Task NarrowDitheringAsync(IProgress<int> progress)
+        {
+            if (!Directory.Exists("missedShaderDump")) Directory.CreateDirectory("missedShaderDump");
+
+            return Task.Run(() =>
+            {
+                for (var i = 0; i < _archive.Count(); i++)
+                {
+                    var vfsPath = _archive.VfsPath(i);
+                    if (vfsPath.EndsWith(".ps.sb"))
+                    {
+                        var binary = _archive.Get(i);
+                        var disassembly = D3DCompiler.Disassemble(binary);
+
+                        // TODO improve
+                        if (disassembly.Contains("discard_z"))
+                        {
+                            bool found = false;
+                            byte[] newBinary = (byte[])binary.Clone();
+
+                            foreach (var pos in binary.SigScan(block_sig))
+                            {
+                                Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block_float_offset, 4);
+                                found = true;
+                            }
+                            foreach (var pos in binary.SigScan(block2_sig))
+                            {
+                                Buffer.BlockCopy(block_float_replacement, 0, newBinary, pos + block2_float_offset, 4);
+                                found = true;
+                            }
+
+                            if (found)
+                            {
+                                int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
+                                Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
+                                _archive.Replace(i, newBinary);
+                            }
+                            else
+                            {
+                                string filename = vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
+                                string outputPath = "missedShaderDump/" + filename;
+                                File.WriteAllBytes(outputPath, binary);
+                                File.WriteAllText(outputPath + ".lst", disassembly);
                             }
                         }
                     }
