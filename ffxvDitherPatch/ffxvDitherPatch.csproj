@@ -49,6 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyExtension.cs" />
+    <Compile Include="Assets.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Assets.resx</DependentUpon>
+    </Compile>
     <Compile Include="BinaryReaderExtension.cs" />
     <Compile Include="BinaryWriterExtension.cs" />
     <Compile Include="ByteArrayExtension.cs" />
@@ -63,6 +69,10 @@
     <Compile Include="Patcher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Assets.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Assets.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -94,6 +104,21 @@
       <Project>{66dc4bdc-57be-42ae-9b8f-651f08ddd963}</Project>
       <Name>DXBCChecksum</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\32_crop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\40_crop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\56_crop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\16_crop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\off_crop.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

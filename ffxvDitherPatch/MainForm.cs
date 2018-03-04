@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +22,9 @@ namespace ffxvDitherPatch
         private const string dummyFileName = "dummy/ffxvDitherPatch";
         private const string dummyVfsPath = "data://dummy/ffxvDitherPatch";
         private readonly byte[] dummyFileContent = { 0x01, 0x00 };
+
+        private const string versionNumber = "1.0";
+
 
         Craf _archive;
         Patcher _patcher;
@@ -91,40 +96,48 @@ namespace ffxvDitherPatch
             _archive.CloseReader();
         }
 
-        private async void MainForm_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
-            await InitialLoad();
+            versionLabel.Text = string.Format("{0} (built {1})",
+                    versionNumber,
+                    Assembly.GetExecutingAssembly().GetLinkerTime()
+                        .ToString("MMM dd, yyyy (hh:mm tt)", CultureInfo.InvariantCulture));
 
-            if (_archive.IndexOf(dummyVfsPath) != -1)
+            Task.Run(async () =>
             {
-                if (File.Exists(backupArchivePath))
+                await InitialLoad();
+
+                if (_archive.IndexOf(dummyVfsPath) != -1)
                 {
-                    var dr = MessageBox.Show("Your shaders were already patched. "
-                                           + "Want to restore the originals? You'll be able to re-patch with different settings afterwards.",
-                        "ffxvDitherPatch",
-                        MessageBoxButtons.YesNo);
-                    if (dr != DialogResult.Yes)
+                    if (File.Exists(backupArchivePath))
                     {
-                        Application.Exit();
+                        var dr = MessageBox.Show("Your shaders were already patched. "
+                                               + "Want to restore the originals? You'll be able to re-patch with different settings afterwards.",
+                            "ffxvDitherPatch",
+                            MessageBoxButtons.YesNo);
+                        if (dr != DialogResult.Yes)
+                        {
+                            Application.Exit();
+                        }
+                        // not redundant - Application.Exit() does not stop control flow here
+                        else
+                        {
+                            File.Delete(archivePath);
+                            File.Move(backupArchivePath, archivePath);
+                            await InitialLoad();
+                        }
                     }
-                    // not redundant - Application.Exit() does not stop control flow here
                     else
                     {
-                        File.Delete(archivePath);
-                        File.Move(backupArchivePath, archivePath);
-                        await InitialLoad();
+                        MessageBox.Show("Your shaders were already patched and no backup was found. "
+                                      + "Please restore the original \"" + archivePath + "\" (e.g. with Steam's Verify Integrity feature).");
+                        Application.Exit();
                     }
                 }
-                else
-                {
-                    MessageBox.Show("Your shaders were already patched and no backup was found. "
-                                  + "Please restore the original \"" + archivePath + "\" (e.g. with Steam's Verify Integrity feature).");
-                    Application.Exit();
-                }
-            }
 
-            _patcher = new Patcher(_archive);
-            processButton.Enabled = true;
+                _patcher = new Patcher(_archive);
+                processButton.Enabled = true;
+            });
         }
     }
 }
