@@ -25,7 +25,6 @@ namespace ffxvDitherPatch
 
         private const string versionNumber = "1.0";
 
-
         Craf _archive;
         Patcher _patcher;
 
@@ -71,10 +70,12 @@ namespace ffxvDitherPatch
 
             progressBar.Value = 0;
             progressBar.Maximum = _patcher.CandidateCount();
+            statusLabel.Text = "Processing shaders";
             await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 40.0f);
 
             progressBar.Value = 0;
             progressBar.Maximum = _archive.Count();
+            statusLabel.Text = "Writing archive";
             try
             {
                 await _archive.SaveAsync(tempArchivePath, new Progress<int>(UpdateProgressBar));
@@ -97,7 +98,7 @@ namespace ffxvDitherPatch
 
             //await _patcher.DumpDiscardPsAsync(new Progress<int>(UpdateProgressBar));
 
-            processButton.Text = "Done";
+            statusLabel.Text = "Done";
         }
 
         private async Task InitialLoad()
@@ -116,6 +117,7 @@ namespace ffxvDitherPatch
                 Application.Exit();
             }
             progressBar.Maximum = _archive.Count();
+            statusLabel.Text = "Loading archive into memory";
             await _archive.LoadAsync(new Progress<int>(UpdateProgressBar));
             _archive.CloseReader();
         }
@@ -161,6 +163,7 @@ namespace ffxvDitherPatch
 
                 _patcher = new Patcher(_archive);
                 processButton.Enabled = true;
+                statusLabel.Text = "Waiting for input";
             });
         }
     }
