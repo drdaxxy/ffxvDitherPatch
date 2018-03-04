@@ -41,22 +41,26 @@
             this.originalPic = new System.Windows.Forms.PictureBox();
             this.originalDescLabel = new System.Windows.Forms.Label();
             this.widePic = new System.Windows.Forms.PictureBox();
-            this.wideLabel = new System.Windows.Forms.Label();
+            this.wideRadio = new System.Windows.Forms.RadioButton();
+            this.wideGroupBox = new System.Windows.Forms.GroupBox();
+            this.mediumGroupBox = new System.Windows.Forms.GroupBox();
             this.mediumPic = new System.Windows.Forms.PictureBox();
-            this.mediumLabel = new System.Windows.Forms.Label();
+            this.mediumRadio = new System.Windows.Forms.RadioButton();
+            this.narrowGroupBox = new System.Windows.Forms.GroupBox();
             this.narrowPic = new System.Windows.Forms.PictureBox();
-            this.narrowLabel = new System.Windows.Forms.Label();
+            this.narrowRadio = new System.Windows.Forms.RadioButton();
+            this.offGroupBox = new System.Windows.Forms.GroupBox();
             this.offDescLabel = new System.Windows.Forms.Label();
             this.offPic = new System.Windows.Forms.PictureBox();
-            this.offLabel = new System.Windows.Forms.Label();
-            this.wideRadio = new System.Windows.Forms.RadioButton();
-            this.narrowRadio = new System.Windows.Forms.RadioButton();
-            this.mediumRadio = new System.Windows.Forms.RadioButton();
             this.offRadio = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.originalPic)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.widePic)).BeginInit();
+            this.wideGroupBox.SuspendLayout();
+            this.mediumGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).BeginInit();
+            this.narrowGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).BeginInit();
+            this.offGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).BeginInit();
             this.SuspendLayout();
             // 
@@ -131,7 +135,7 @@
             this.projectLink.Location = new System.Drawing.Point(16, 32);
             this.projectLink.Name = "projectLink";
             this.projectLink.Size = new System.Drawing.Size(240, 15);
-            this.projectLink.TabIndex = 6;
+            this.projectLink.TabIndex = 2;
             this.projectLink.TabStop = true;
             this.projectLink.Text = "https://github.com/drdaxxy/ffxvDitherPatch";
             this.projectLink.VisitedLinkColor = System.Drawing.SystemColors.ControlText;
@@ -170,7 +174,7 @@
             // 
             this.originalPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.originalPic.Image = global::ffxvDitherPatch.Assets._16_crop;
-            this.originalPic.Location = new System.Drawing.Point(520, 128);
+            this.originalPic.Location = new System.Drawing.Point(524, 128);
             this.originalPic.Name = "originalPic";
             this.originalPic.Size = new System.Drawing.Size(150, 110);
             this.originalPic.TabIndex = 11;
@@ -189,150 +193,156 @@
             // 
             this.widePic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.widePic.Image = global::ffxvDitherPatch.Assets._32_crop;
-            this.widePic.Location = new System.Drawing.Point(176, 264);
+            this.widePic.Location = new System.Drawing.Point(160, 16);
             this.widePic.Name = "widePic";
             this.widePic.Size = new System.Drawing.Size(150, 110);
             this.widePic.TabIndex = 33;
             this.widePic.TabStop = false;
             // 
-            // wideLabel
+            // wideRadio
             // 
-            this.wideLabel.AutoSize = true;
-            this.wideLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.wideLabel.Location = new System.Drawing.Point(16, 264);
-            this.wideLabel.Name = "wideLabel";
-            this.wideLabel.Size = new System.Drawing.Size(68, 15);
-            this.wideLabel.TabIndex = 32;
-            this.wideLabel.Text = "Wide (32x)";
+            this.wideRadio.AutoSize = true;
+            this.wideRadio.Location = new System.Drawing.Point(16, 64);
+            this.wideRadio.Name = "wideRadio";
+            this.wideRadio.Size = new System.Drawing.Size(14, 13);
+            this.wideRadio.TabIndex = 3;
+            this.wideRadio.TabStop = true;
+            this.wideRadio.UseVisualStyleBackColor = true;
+            this.wideRadio.CheckedChanged += new System.EventHandler(this.radioCheck);
+            // 
+            // wideGroupBox
+            // 
+            this.wideGroupBox.Controls.Add(this.widePic);
+            this.wideGroupBox.Controls.Add(this.wideRadio);
+            this.wideGroupBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.wideGroupBox.Location = new System.Drawing.Point(16, 256);
+            this.wideGroupBox.Name = "wideGroupBox";
+            this.wideGroupBox.Size = new System.Drawing.Size(320, 136);
+            this.wideGroupBox.TabIndex = 51;
+            this.wideGroupBox.TabStop = false;
+            this.wideGroupBox.Text = "Wide (32x)";
+            // 
+            // mediumGroupBox
+            // 
+            this.mediumGroupBox.Controls.Add(this.mediumPic);
+            this.mediumGroupBox.Controls.Add(this.mediumRadio);
+            this.mediumGroupBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.mediumGroupBox.Location = new System.Drawing.Point(364, 256);
+            this.mediumGroupBox.Name = "mediumGroupBox";
+            this.mediumGroupBox.Size = new System.Drawing.Size(320, 136);
+            this.mediumGroupBox.TabIndex = 52;
+            this.mediumGroupBox.TabStop = false;
+            this.mediumGroupBox.Text = "Medium (40x)";
             // 
             // mediumPic
             // 
             this.mediumPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.mediumPic.Image = global::ffxvDitherPatch.Assets._40_crop;
-            this.mediumPic.Location = new System.Drawing.Point(520, 264);
+            this.mediumPic.Location = new System.Drawing.Point(160, 16);
             this.mediumPic.Name = "mediumPic";
             this.mediumPic.Size = new System.Drawing.Size(150, 110);
-            this.mediumPic.TabIndex = 37;
+            this.mediumPic.TabIndex = 33;
             this.mediumPic.TabStop = false;
             // 
-            // mediumLabel
+            // mediumRadio
             // 
-            this.mediumLabel.AutoSize = true;
-            this.mediumLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.mediumLabel.Location = new System.Drawing.Point(364, 264);
-            this.mediumLabel.Name = "mediumLabel";
-            this.mediumLabel.Size = new System.Drawing.Size(85, 15);
-            this.mediumLabel.TabIndex = 36;
-            this.mediumLabel.Text = "Medium (40x)";
+            this.mediumRadio.AutoSize = true;
+            this.mediumRadio.Checked = true;
+            this.mediumRadio.Location = new System.Drawing.Point(16, 64);
+            this.mediumRadio.Name = "mediumRadio";
+            this.mediumRadio.Size = new System.Drawing.Size(14, 13);
+            this.mediumRadio.TabIndex = 4;
+            this.mediumRadio.TabStop = true;
+            this.mediumRadio.UseVisualStyleBackColor = true;
+            this.mediumRadio.CheckedChanged += new System.EventHandler(this.radioCheck);
+            // 
+            // narrowGroupBox
+            // 
+            this.narrowGroupBox.Controls.Add(this.narrowPic);
+            this.narrowGroupBox.Controls.Add(this.narrowRadio);
+            this.narrowGroupBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.narrowGroupBox.Location = new System.Drawing.Point(16, 400);
+            this.narrowGroupBox.Name = "narrowGroupBox";
+            this.narrowGroupBox.Size = new System.Drawing.Size(320, 136);
+            this.narrowGroupBox.TabIndex = 53;
+            this.narrowGroupBox.TabStop = false;
+            this.narrowGroupBox.Text = "Narrow (56x)";
             // 
             // narrowPic
             // 
             this.narrowPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.narrowPic.Image = global::ffxvDitherPatch.Assets._56_crop;
-            this.narrowPic.Location = new System.Drawing.Point(176, 408);
+            this.narrowPic.Location = new System.Drawing.Point(160, 16);
             this.narrowPic.Name = "narrowPic";
             this.narrowPic.Size = new System.Drawing.Size(150, 110);
-            this.narrowPic.TabIndex = 41;
+            this.narrowPic.TabIndex = 33;
             this.narrowPic.TabStop = false;
             // 
-            // narrowLabel
+            // narrowRadio
             // 
-            this.narrowLabel.AutoSize = true;
-            this.narrowLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.narrowLabel.Location = new System.Drawing.Point(16, 408);
-            this.narrowLabel.Name = "narrowLabel";
-            this.narrowLabel.Size = new System.Drawing.Size(81, 15);
-            this.narrowLabel.TabIndex = 40;
-            this.narrowLabel.Text = "Narrow (56x)";
+            this.narrowRadio.AutoSize = true;
+            this.narrowRadio.Location = new System.Drawing.Point(16, 64);
+            this.narrowRadio.Name = "narrowRadio";
+            this.narrowRadio.Size = new System.Drawing.Size(14, 13);
+            this.narrowRadio.TabIndex = 5;
+            this.narrowRadio.TabStop = true;
+            this.narrowRadio.UseVisualStyleBackColor = true;
+            this.narrowRadio.CheckedChanged += new System.EventHandler(this.radioCheck);
+            // 
+            // offGroupBox
+            // 
+            this.offGroupBox.Controls.Add(this.offDescLabel);
+            this.offGroupBox.Controls.Add(this.offPic);
+            this.offGroupBox.Controls.Add(this.offRadio);
+            this.offGroupBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.offGroupBox.Location = new System.Drawing.Point(364, 400);
+            this.offGroupBox.Name = "offGroupBox";
+            this.offGroupBox.Size = new System.Drawing.Size(320, 136);
+            this.offGroupBox.TabIndex = 54;
+            this.offGroupBox.TabStop = false;
+            this.offGroupBox.Text = "Off";
             // 
             // offDescLabel
             // 
             this.offDescLabel.AutoSize = true;
-            this.offDescLabel.Location = new System.Drawing.Point(364, 432);
+            this.offDescLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.offDescLabel.Location = new System.Drawing.Point(8, 24);
             this.offDescLabel.Name = "offDescLabel";
             this.offDescLabel.Size = new System.Drawing.Size(52, 15);
-            this.offDescLabel.TabIndex = 46;
+            this.offDescLabel.TabIndex = 48;
             this.offDescLabel.Text = "Bad idea";
             // 
             // offPic
             // 
             this.offPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.offPic.Image = global::ffxvDitherPatch.Assets.off_crop;
-            this.offPic.Location = new System.Drawing.Point(520, 408);
+            this.offPic.Location = new System.Drawing.Point(160, 16);
             this.offPic.Name = "offPic";
             this.offPic.Size = new System.Drawing.Size(150, 110);
-            this.offPic.TabIndex = 45;
+            this.offPic.TabIndex = 33;
             this.offPic.TabStop = false;
-            // 
-            // offLabel
-            // 
-            this.offLabel.AutoSize = true;
-            this.offLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.offLabel.Location = new System.Drawing.Point(364, 408);
-            this.offLabel.Name = "offLabel";
-            this.offLabel.Size = new System.Drawing.Size(26, 15);
-            this.offLabel.TabIndex = 44;
-            this.offLabel.Text = "Off";
-            // 
-            // wideRadio
-            // 
-            this.wideRadio.AutoSize = true;
-            this.wideRadio.Location = new System.Drawing.Point(16, 312);
-            this.wideRadio.Name = "wideRadio";
-            this.wideRadio.Size = new System.Drawing.Size(14, 13);
-            this.wideRadio.TabIndex = 47;
-            this.wideRadio.TabStop = true;
-            this.wideRadio.UseVisualStyleBackColor = true;
-            // 
-            // narrowRadio
-            // 
-            this.narrowRadio.AutoSize = true;
-            this.narrowRadio.Location = new System.Drawing.Point(16, 456);
-            this.narrowRadio.Name = "narrowRadio";
-            this.narrowRadio.Size = new System.Drawing.Size(14, 13);
-            this.narrowRadio.TabIndex = 48;
-            this.narrowRadio.TabStop = true;
-            this.narrowRadio.UseVisualStyleBackColor = true;
-            // 
-            // mediumRadio
-            // 
-            this.mediumRadio.AutoSize = true;
-            this.mediumRadio.Location = new System.Drawing.Point(364, 312);
-            this.mediumRadio.Name = "mediumRadio";
-            this.mediumRadio.Size = new System.Drawing.Size(14, 13);
-            this.mediumRadio.TabIndex = 49;
-            this.mediumRadio.TabStop = true;
-            this.mediumRadio.UseVisualStyleBackColor = true;
             // 
             // offRadio
             // 
             this.offRadio.AutoSize = true;
-            this.offRadio.Location = new System.Drawing.Point(364, 456);
+            this.offRadio.Location = new System.Drawing.Point(16, 64);
             this.offRadio.Name = "offRadio";
             this.offRadio.Size = new System.Drawing.Size(14, 13);
-            this.offRadio.TabIndex = 50;
+            this.offRadio.TabIndex = 6;
             this.offRadio.TabStop = true;
             this.offRadio.UseVisualStyleBackColor = true;
+            this.offRadio.CheckedChanged += new System.EventHandler(this.radioCheck);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.ClientSize = new System.Drawing.Size(704, 537);
-            this.Controls.Add(this.offRadio);
-            this.Controls.Add(this.mediumRadio);
-            this.Controls.Add(this.narrowRadio);
-            this.Controls.Add(this.wideRadio);
-            this.Controls.Add(this.offDescLabel);
-            this.Controls.Add(this.offPic);
-            this.Controls.Add(this.offLabel);
-            this.Controls.Add(this.narrowPic);
-            this.Controls.Add(this.narrowLabel);
-            this.Controls.Add(this.mediumPic);
-            this.Controls.Add(this.mediumLabel);
-            this.Controls.Add(this.widePic);
-            this.Controls.Add(this.wideLabel);
+            this.ClientSize = new System.Drawing.Size(704, 545);
+            this.Controls.Add(this.offGroupBox);
+            this.Controls.Add(this.narrowGroupBox);
+            this.Controls.Add(this.mediumGroupBox);
+            this.Controls.Add(this.wideGroupBox);
             this.Controls.Add(this.originalDescLabel);
             this.Controls.Add(this.originalPic);
             this.Controls.Add(this.originalLabel);
@@ -354,8 +364,16 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.originalPic)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.widePic)).EndInit();
+            this.wideGroupBox.ResumeLayout(false);
+            this.wideGroupBox.PerformLayout();
+            this.mediumGroupBox.ResumeLayout(false);
+            this.mediumGroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).EndInit();
+            this.narrowGroupBox.ResumeLayout(false);
+            this.narrowGroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).EndInit();
+            this.offGroupBox.ResumeLayout(false);
+            this.offGroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -377,18 +395,18 @@
         private System.Windows.Forms.PictureBox originalPic;
         private System.Windows.Forms.Label originalDescLabel;
         private System.Windows.Forms.PictureBox widePic;
-        private System.Windows.Forms.Label wideLabel;
-        private System.Windows.Forms.PictureBox mediumPic;
-        private System.Windows.Forms.Label mediumLabel;
-        private System.Windows.Forms.PictureBox narrowPic;
-        private System.Windows.Forms.Label narrowLabel;
-        private System.Windows.Forms.Label offDescLabel;
-        private System.Windows.Forms.PictureBox offPic;
-        private System.Windows.Forms.Label offLabel;
         private System.Windows.Forms.RadioButton wideRadio;
-        private System.Windows.Forms.RadioButton narrowRadio;
+        private System.Windows.Forms.GroupBox wideGroupBox;
+        private System.Windows.Forms.GroupBox mediumGroupBox;
+        private System.Windows.Forms.PictureBox mediumPic;
         private System.Windows.Forms.RadioButton mediumRadio;
+        private System.Windows.Forms.GroupBox narrowGroupBox;
+        private System.Windows.Forms.PictureBox narrowPic;
+        private System.Windows.Forms.RadioButton narrowRadio;
+        private System.Windows.Forms.GroupBox offGroupBox;
+        private System.Windows.Forms.PictureBox offPic;
         private System.Windows.Forms.RadioButton offRadio;
+        private System.Windows.Forms.Label offDescLabel;
     }
 }
 

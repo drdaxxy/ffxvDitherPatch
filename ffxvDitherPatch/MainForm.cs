@@ -29,9 +29,33 @@ namespace ffxvDitherPatch
         Craf _archive;
         Patcher _patcher;
 
+        private List<RadioButton> radioSet;
+
         public MainForm()
         {
             InitializeComponent();
+
+            wideGroupBox.Click += (sender, ev) => { wideRadio.PerformClick(); };
+            mediumGroupBox.Click += (sender, ev) => { mediumRadio.PerformClick(); };
+            narrowGroupBox.Click += (sender, ev) => { narrowRadio.PerformClick(); };
+            offGroupBox.Click += (sender, ev) => { offRadio.PerformClick(); };
+            widePic.Click += (sender, ev) => { wideRadio.PerformClick(); };
+            mediumPic.Click += (sender, ev) => { mediumRadio.PerformClick(); };
+            narrowPic.Click += (sender, ev) => { narrowRadio.PerformClick(); };
+            offPic.Click += (sender, ev) => { offRadio.PerformClick(); };
+
+            radioSet = new List<RadioButton> { wideRadio, mediumRadio, narrowRadio, offRadio };
+        }
+
+        private void radioCheck(object sender, EventArgs e)
+        {
+            if (!((RadioButton)sender).Checked) return;
+
+            foreach (var other in radioSet)
+            {
+                if (other == sender) continue;
+                other.Checked = false;
+            }
         }
 
         private void UpdateProgressBar(int val)
