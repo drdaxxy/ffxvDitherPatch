@@ -230,6 +230,27 @@ namespace ffxvDitherPatch
             });
         }
 
+        public void Append(string path, string vfsPath, bool compress, byte[] content)
+        {
+            if (_inputStream != null) throw new Exception("Tried to add CRAF entry while still in read mode");
+            if (IndexOf(vfsPath) != -1) throw new Exception("Tried to add file to CRAF with same path as existing file");
+
+            var entry = new CrafEntry();
+            entry.path = path;
+            entry.vfsPath = vfsPath;
+            entry.flags = compress ? (uint)2 : 0;
+            _files.Add(entry);
+            Replace(_files.Count - 1, content);
+        }
+
+        public int IndexOf(string vfsPath)
+        {
+            return _files.FindIndex((entry) =>
+            {
+                return entry.vfsPath == vfsPath;
+            });
+        }
+
         public void Replace(int id, byte[] content)
         {
             if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to modify CRAF entry out of bounds");
