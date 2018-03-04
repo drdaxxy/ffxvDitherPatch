@@ -101,7 +101,7 @@ namespace ffxvDitherPatch
             statusLabel.Text = "Done";
         }
 
-        private async Task InitialLoad()
+        private void InitialOpen()
         {
             try
             {
@@ -116,10 +116,6 @@ namespace ffxvDitherPatch
                               + ex.Message);
                 Application.Exit();
             }
-            progressBar.Maximum = _archive.Count();
-            statusLabel.Text = "Loading archive into memory";
-            await _archive.LoadAsync(new Progress<int>(UpdateProgressBar));
-            _archive.CloseReader();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -129,12 +125,12 @@ namespace ffxvDitherPatch
                     Assembly.GetExecutingAssembly().GetLinkerTime()
                         .ToString("MMM dd, yyyy (hh:mm tt)", CultureInfo.InvariantCulture));
 
-            Task.Run(async () =>
-            {
-                await InitialLoad();
+            this.BeginInvoke((MethodInvoker) async delegate {
+                InitialOpen();
 
                 if (_archive.IndexOf(dummyVfsPath) != -1)
                 {
+                    _archive.CloseReader();
                     if (File.Exists(backupArchivePath))
                     {
                         var dr = MessageBox.Show("Your shaders were already patched. "
@@ -150,7 +146,7 @@ namespace ffxvDitherPatch
                         {
                             File.Delete(archivePath);
                             File.Move(backupArchivePath, archivePath);
-                            await InitialLoad();
+                            InitialOpen();
                         }
                     }
                     else
@@ -160,6 +156,11 @@ namespace ffxvDitherPatch
                         Application.Exit();
                     }
                 }
+
+                progressBar.Maximum = _archive.Count();
+                statusLabel.Text = "Loading archive into memory";
+                await _archive.LoadAsync(new Progress<int>(UpdateProgressBar));
+                _archive.CloseReader();
 
                 _patcher = new Patcher(_archive);
                 processButton.Enabled = true;
