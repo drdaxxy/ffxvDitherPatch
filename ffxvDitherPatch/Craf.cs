@@ -85,7 +85,7 @@ namespace ffxvDitherPatch
         private uint _unk0;
         private byte[] _unk1;
 
-        private CrafEntry[] _files;
+        private List<CrafEntry> _files;
 
         private FileStream _inputStream;
         private bool _loaded;
@@ -116,7 +116,8 @@ namespace ffxvDitherPatch
                 _inputStream.Seek(4, SeekOrigin.Begin);
                 _versionMinor = bin.ReadUInt16();
                 _versionMajor = bin.ReadUInt16();
-                _files = new CrafEntry[bin.ReadInt32()];
+                var fileCount = bin.ReadInt32();
+                _files = new List<CrafEntry>(fileCount);
                 _unk0 = bin.ReadUInt32();
 
                 uint firstEntryOffset = bin.ReadUInt32();
@@ -126,26 +127,27 @@ namespace ffxvDitherPatch
 
                 _inputStream.Seek(firstEntryOffset, SeekOrigin.Begin);
 
-                for (var i = 0; i < _files.Length; i++)
+                for (var i = 0; i < fileCount; i++)
                 {
-                    _files[i] = new CrafEntry();
-                    _files[i].unk0 = bin.ReadUInt32();
-                    _files[i].unk1 = bin.ReadUInt32();
-                    _files[i].uncompressedSize = bin.ReadInt32();
-                    _files[i].totalCompressedSize = bin.ReadInt32();
-                    _files[i].flags = bin.ReadUInt32();
+                    var entry = new CrafEntry();
+                    entry.unk0 = bin.ReadUInt32();
+                    entry.unk1 = bin.ReadUInt32();
+                    entry.uncompressedSize = bin.ReadInt32();
+                    entry.totalCompressedSize = bin.ReadInt32();
+                    entry.flags = bin.ReadUInt32();
                     uint vfsPathOffset = bin.ReadUInt32();
-                    _files[i].dataOffset = bin.ReadUInt32();
-                    _files[i].unk2 = bin.ReadUInt32();
+                    entry.dataOffset = bin.ReadUInt32();
+                    entry.unk2 = bin.ReadUInt32();
                     uint pathOffset = bin.ReadUInt32();
-                    _files[i].unk3 = bin.ReadUInt32();
+                    entry.unk3 = bin.ReadUInt32();
 
                     long entryEnd = _inputStream.Position;
                     _inputStream.Seek(vfsPathOffset, SeekOrigin.Begin);
-                    _files[i].vfsPath = bin.ReadNullTerminatedString();
+                    entry.vfsPath = bin.ReadNullTerminatedString();
                     _inputStream.Seek(pathOffset, SeekOrigin.Begin);
-                    _files[i].path = bin.ReadNullTerminatedString();
+                    entry.path = bin.ReadNullTerminatedString();
                     _inputStream.Seek(entryEnd, SeekOrigin.Begin);
+                    _files.Add(entry);
                 }
             }
         }
@@ -182,7 +184,7 @@ namespace ffxvDitherPatch
 
         private void LoadEntry(int id)
         {
-            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
             if (_inputStream is null) throw new Exception("Tried to load CRAF entry after reader was closed");
 
             using (BinaryReader bin = new BinaryReader(_inputStream, Encoding.Default, true))
@@ -210,7 +212,7 @@ namespace ffxvDitherPatch
             }
         }
 
-        public int Count() { return _files.Length; }
+        public int Count() { return _files.Count; }
 
         public Task LoadAsync(IProgress<int> progress)
         {
@@ -230,7 +232,7 @@ namespace ffxvDitherPatch
 
         public void Replace(int id, byte[] content)
         {
-            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to modify CRAF entry out of bounds");
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to modify CRAF entry out of bounds");
             if (_inputStream != null) throw new Exception("Tried to modify CRAF entry while still in read mode");
 
             var uncompressedSize = content.Length;
@@ -279,14 +281,14 @@ namespace ffxvDitherPatch
 
         public string VfsPath(int id)
         {
-            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
 
             return _files[id].vfsPath;
         }
 
         public string VfsFilename(int id)
         {
-            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
 
             var vfsPath = VfsPath(id);
             return vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
@@ -294,7 +296,7 @@ namespace ffxvDitherPatch
 
         public byte[] Get(int id)
         {
-            if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
             if (!_loaded) throw new Exception("Tried to read CRAF entry before loading data");
 
             if (_files[id].UseCompression)
@@ -349,16 +351,16 @@ namespace ffxvDitherPatch
                         bin.Write(magic);
                         bin.Write(_versionMinor);
                         bin.Write(_versionMajor);
-                        bin.Write(_files.Length);
+                        bin.Write(_files.Count);
                         bin.Write(_unk0);
                         file.Seek(0x20, SeekOrigin.Begin);
                         bin.Write(_unk1);
 
                         uint firstEntryOffset = (uint)file.Position;
 
-                        file.Seek(firstEntryOffset + 0x28 * _files.Length, SeekOrigin.Begin);
+                        file.Seek(firstEntryOffset + 0x28 * _files.Count, SeekOrigin.Begin);
                         file.Seek(AlignTo(file.Position, 16), SeekOrigin.Begin);
-                        for (var i = 0; i < _files.Length; i++)
+                        for (var i = 0; i < _files.Count; i++)
                         {
                             var vfsPathOffset = AlignTo(file.Position, 8);
                             file.Seek(vfsPathOffset, SeekOrigin.Begin);
@@ -370,7 +372,7 @@ namespace ffxvDitherPatch
                         file.Seek(AlignTo(file.Position, 16), SeekOrigin.Begin);
                         file.Seek(8, SeekOrigin.Current);
 
-                        for (var i = 0; i < _files.Length; i++)
+                        for (var i = 0; i < _files.Count; i++)
                         {
                             var pathOffset = AlignTo(file.Position, 8);
                             file.Seek(pathOffset, SeekOrigin.Begin);
@@ -378,7 +380,7 @@ namespace ffxvDitherPatch
                             _files[i].pathOffset = (uint)pathOffset;
                         }
 
-                        for (var i = 0; i < _files.Length; i++)
+                        for (var i = 0; i < _files.Count; i++)
                         {
                             var dataOffset = AlignTo(file.Position, 0x200);
                             file.Seek(dataOffset, SeekOrigin.Begin);
@@ -418,7 +420,7 @@ namespace ffxvDitherPatch
                         bin.Write(_files[0].dataOffset);
 
                         file.Seek(firstEntryOffset, SeekOrigin.Begin);
-                        for (var i = 0; i < _files.Length; i++)
+                        for (var i = 0; i < _files.Count; i++)
                         {
                             bin.Write(_files[i].unk0);
                             bin.Write(_files[i].unk1);
