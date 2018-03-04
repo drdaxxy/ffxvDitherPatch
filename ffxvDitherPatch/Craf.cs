@@ -12,6 +12,8 @@ namespace ffxvDitherPatch
     // THIS IS COMPLETE ENOUGH FOR THE SHADERS BUT I HAVEN'T TESTED IT WITH ANYTHING ELSE
     // Feel free to use as reference but don't expect it to fully support all archives
 
+    // The game's reader appears to be sensitive to alignment.
+
     //              struct HEADER {
     //  /* 00 */        char magic[4]; // 'C','R','A','F'
     //  /* 04 */        ushort minorVersion;
@@ -266,7 +268,7 @@ namespace ffxvDitherPatch
                     remaining -= chunkUncompressedSize;
                 }
 
-                _files[id].totalCompressedSize = AlignTo(_files[id].totalCompressedSize, 8);
+                _files[id].totalCompressedSize = AlignTo(_files[id].totalCompressedSize, 4);
             }
             else
             {
