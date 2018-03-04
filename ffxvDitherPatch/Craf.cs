@@ -162,6 +162,22 @@ namespace ffxvDitherPatch
             return (int)result;
         }
 
+        private int AlignTo(int offset, int align)
+        {
+            if (offset % align == 0) return offset;
+            return ((offset / align) + 1) * align;
+        }
+        private uint AlignTo(uint offset, int align)
+        {
+            if (offset % align == 0) return offset;
+            return (uint)(((offset / align) + 1) * align);
+        }
+        private long AlignTo(long offset, int align)
+        {
+            if (offset % align == 0) return offset;
+            return ((offset / align) + 1) * align;
+        }
+
         private void LoadEntry(int id)
         {
             if (id < 0 || id > _files.Length - 1) throw new Exception("Tried to read CRAF entry out of bounds");
@@ -250,7 +266,7 @@ namespace ffxvDitherPatch
                     remaining -= chunkUncompressedSize;
                 }
 
-                _files[id].totalCompressedSize += (8 - (_files[id].totalCompressedSize % 8));
+                _files[id].totalCompressedSize = AlignTo(_files[id].totalCompressedSize, 8);
             }
             else
             {
@@ -321,6 +337,8 @@ namespace ffxvDitherPatch
 
             return Task.Run(() =>
             {
+                // Create mode is slow
+                if (File.Exists(Path)) File.Delete(Path);
                 using (FileStream file = File.OpenWrite(Path))
                 {
                     using (BinaryWriter bin = new BinaryWriter(file))
@@ -337,22 +355,22 @@ namespace ffxvDitherPatch
                         uint firstEntryOffset = (uint)file.Position;
 
                         file.Seek(firstEntryOffset + 0x28 * _files.Length, SeekOrigin.Begin);
-
+                        file.Seek(AlignTo(file.Position, 16), SeekOrigin.Begin);
                         for (var i = 0; i < _files.Length; i++)
                         {
-                            var vfsPathOffset = file.Position + (8 - (file.Position % 8));
+                            var vfsPathOffset = AlignTo(file.Position, 8);
                             file.Seek(vfsPathOffset, SeekOrigin.Begin);
                             bin.WriteNullTerminatedString(_files[i].vfsPath);
                             _files[i].vfsPathOffset = (uint)vfsPathOffset;
                         }
 
                         // don't ask me why, but it's normally padded like that
-                        file.Seek((8 - (file.Position % 8)), SeekOrigin.Current);
+                        file.Seek(AlignTo(file.Position, 16), SeekOrigin.Begin);
                         file.Seek(8, SeekOrigin.Current);
 
                         for (var i = 0; i < _files.Length; i++)
                         {
-                            var pathOffset = file.Position + (8 - (file.Position % 8));
+                            var pathOffset = AlignTo(file.Position, 8);
                             file.Seek(pathOffset, SeekOrigin.Begin);
                             bin.WriteNullTerminatedString(_files[i].path);
                             _files[i].pathOffset = (uint)pathOffset;
@@ -360,7 +378,7 @@ namespace ffxvDitherPatch
 
                         for (var i = 0; i < _files.Length; i++)
                         {
-                            var dataOffset = file.Position + (0x400 - (file.Position % 0x400));
+                            var dataOffset = AlignTo(file.Position, 0x200);
                             file.Seek(dataOffset, SeekOrigin.Begin);
                             if (_files[i].UseCompression)
                             {
@@ -369,9 +387,8 @@ namespace ffxvDitherPatch
                                     bin.Write(_files[i].chunks[j].compressedData.Length);
                                     bin.Write(_files[i].chunks[j].uncompressedSize);
                                     bin.Write(_files[i].chunks[j].compressedData);
-
-                                    file.Seek(dataOffset + _files[i].totalCompressedSize, SeekOrigin.Begin); // compressed files are padded;
                                 }
+                                file.Seek(dataOffset + _files[i].totalCompressedSize, SeekOrigin.Begin); // compressed files are padded;
                             }
                             else
                             {
@@ -379,7 +396,17 @@ namespace ffxvDitherPatch
                             }
                             _files[i].dataOffset = (uint)dataOffset;
 
+                            // files should not directly follow one another
+                            file.Seek(1, SeekOrigin.Current);
+
                             progress.Report(i+1);
+                        }
+                        // original files are padded at the end
+                        if (AlignTo(file.Position, 0x200) != file.Position)
+                        {
+                            file.Seek(AlignTo(file.Position, 0x200) - 1, SeekOrigin.Begin);
+                            // force filesize increase
+                            file.WriteByte(0);
                         }
 
                         file.Seek(0x10, SeekOrigin.Begin);
