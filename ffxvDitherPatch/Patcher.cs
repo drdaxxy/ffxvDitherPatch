@@ -100,48 +100,45 @@ namespace ffxvDitherPatch
                 {
                     var id = _candidateIds[i];
                     var binary = _archive.Get(id);
-                    var disassembly = D3DCompiler.Disassemble(binary);
 
-                    if (disassembly.Contains("discard_z"))
+                    bool found = false;
+                    byte[] newBinary = (byte[])binary.Clone();
+
+                    foreach (var pos in binary.SigScan(block_sig))
                     {
-                        bool found = false;
-                        byte[] newBinary = (byte[])binary.Clone();
-
-                        foreach (var pos in binary.SigScan(block_sig))
+                        switch(mode)
                         {
-                            switch(mode)
-                            {
-                                case PatchMode.DisableDithering:
-                                    Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
-                                    break;
-                                case PatchMode.NarrowDithering:
-                                    Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block_float_offset, 4);
-                                    break;
-                            }
-                            found = true;
+                            case PatchMode.DisableDithering:
+                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block_discard_offset, 12);
+                                break;
+                            case PatchMode.NarrowDithering:
+                                Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block_float_offset, 4);
+                                break;
                         }
-
-                        foreach (var pos in binary.SigScan(block2_sig))
-                        {
-                            switch (mode)
-                            {
-                                case PatchMode.DisableDithering:
-                                    Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
-                                    break;
-                                case PatchMode.NarrowDithering:
-                                    Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block2_float_offset, 4);
-                                    break;
-                            }
-                            found = true;
-                        }
-
-                        if (found)
-                        {
-                            int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
-                            Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
-                            _archive.Replace(id, newBinary);
-                        }
+                        found = true;
                     }
+
+                    foreach (var pos in binary.SigScan(block2_sig))
+                    {
+                        switch (mode)
+                        {
+                            case PatchMode.DisableDithering:
+                                Buffer.BlockCopy(nop_12x, 0, newBinary, pos + block2_discard_offset, 12);
+                                break;
+                            case PatchMode.NarrowDithering:
+                                Buffer.BlockCopy(_multiplier, 0, newBinary, pos + block2_float_offset, 4);
+                                break;
+                        }
+                        found = true;
+                    }
+
+                    if (found)
+                    {
+                        int[] checksum = DXBCChecksum.DXBCChecksum.CalculateDXBCChecksum(newBinary);
+                        Buffer.BlockCopy(checksum, 0, newBinary, 4, 16);
+                        _archive.Replace(id, newBinary);
+                    }
+
                     progress.Report(i + 1);
                 }
             });
