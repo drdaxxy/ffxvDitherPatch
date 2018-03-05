@@ -65,13 +65,32 @@ namespace ffxvDitherPatch
         private async void processButton_Click(object sender, EventArgs e)
         {
             processButton.Enabled = false;
+            foreach (var btn in radioSet)
+            {
+                btn.Enabled = false;
+            }
 
             _archive.Append(dummyFileName, dummyVfsPath, false, dummyFileContent);
 
             progressBar.Value = 0;
             progressBar.Maximum = _patcher.CandidateCount();
             statusLabel.Text = "Processing shaders";
-            await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 40.0f);
+            if (offRadio.Checked)
+            {
+                await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.DisableDithering, 0.0f);
+            }
+            else if (wideRadio.Checked)
+            {
+                await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 32.0f);
+            }
+            else if (narrowRadio.Checked)
+            {
+                await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 56.0f);
+            }
+            else
+            {
+                await _patcher.PatchAsync(new Progress<int>(UpdateProgressBar), Patcher.PatchMode.NarrowDithering, 40.0f);
+            }
 
             progressBar.Value = 0;
             progressBar.Maximum = _archive.Count();
