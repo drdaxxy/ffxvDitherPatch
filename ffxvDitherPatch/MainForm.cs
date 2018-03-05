@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Craf;
 
 namespace ffxvDitherPatch
 {
@@ -25,7 +26,7 @@ namespace ffxvDitherPatch
 
         private const string versionNumber = "1.0";
 
-        Craf _archive;
+        CrafArchive _archive;
         Patcher _patcher;
 
         private List<RadioButton> radioSet;
@@ -99,6 +100,12 @@ namespace ffxvDitherPatch
             {
                 await _archive.SaveAsync(tempArchivePath, new Progress<int>(UpdateProgressBar));
 
+                // Use case:
+                // - User applies patch, producing patched archive and backup archive
+                // - Game update overwrites patched archive
+                // - Backup archive is now present despite regular archive having no patch marker
+                if (File.Exists(backupArchivePath)) File.Delete(backupArchivePath);
+
                 File.Move(archivePath, backupArchivePath);
                 File.Move(tempArchivePath, archivePath);
             }
@@ -124,7 +131,7 @@ namespace ffxvDitherPatch
         {
             try
             {
-                _archive = Craf.Open(archivePath);
+                _archive = CrafArchive.Open(archivePath);
             }
             catch (IOException ex)
             {

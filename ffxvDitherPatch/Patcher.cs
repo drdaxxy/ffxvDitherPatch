@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Craf;
 
 namespace ffxvDitherPatch
 {
@@ -15,7 +16,7 @@ namespace ffxvDitherPatch
             NarrowDithering
         }
 
-        private Craf _archive;
+        private CrafArchive _archive;
         private List<int> _candidateIds;
 
         // Example:
@@ -51,7 +52,7 @@ namespace ffxvDitherPatch
 
         private static readonly byte[] nop_12x = { 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01, 0x3A, 0x00, 0x00, 0x01 };
 
-        public Patcher(Craf archive) {
+        public Patcher(CrafArchive archive) {
             _archive = archive;
             _candidateIds = new List<int>();
 

@@ -1,4 +1,18 @@
-﻿using Ionic.Zlib;
+﻿// Copyright 2018 Niklas K.
+
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+// REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+// FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+// INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+// LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+// OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
+
+using Ionic.Zlib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,12 +21,47 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ffxvDitherPatch
+namespace Craf
 {
-    // THIS IS COMPLETE ENOUGH FOR THE SHADERS BUT I HAVEN'T TESTED IT WITH ANYTHING ELSE
-    // Feel free to use as reference but don't expect it to fully support all archives
+    // I HAVE ONLY TESTED THIS WITH ONE ARCHIVE (datas/shaders/shadergen/autoexternal.earc)
+    // Feel free to use as reference but keep in mind that it may not work out of the box.
 
-    // The game's reader appears to be sensitive to alignment.
+    // The game's reader appears to be sensitive to alignment. I'm not sure *all* alignment
+    // in this code is exactly what the original archiver does, but this does seem
+    // to produce equivalent alignment for the archive mentioned above.
+    // The only differences I have observed between the original and a repack with no changes
+    // (but many files Replace()d with unchanged content) are in the compressed data, due to
+    // using a different Zlib implementation.
+
+    // Signedness is down to what happened to be convenient. I don't know whether
+    // the game uses signed or unsigned arithmetic for any of these fields.
+
+    // I do not know whether the game requires files of a certain size to be compressed or uncompressed.
+
+    // This may or may not work with archives taken from the console version.
+    // I do not have access to those files and have not looked into it.
+
+    // The API is somewhat specific to what I'm actually using this for.
+    // THIS NEEDS THE ENTIRE ARCHIVE LOADED INTO MEMORY to access or replace content.
+    // So you probably don't want to use this code unmodified.
+
+    //  USAGE
+    //    var craf = Craf.Open("path/to/autoexternal.earc");
+    //  now available:
+    //    craf.Count();
+    //    craf.IndexOf("data://foo/bar.bin"); // => 12
+    //    craf.VfsPath(12);                   // => "data://foo/bar.bin"
+    //    craf.VfsFilename(12);               // => "bar.bin"
+    //    await craf.LoadAsync(progress);     // 'progress' gets updated with file ID after each file is read
+    //  now available:
+    //    craf.Get(12);                       // => byte[] { ... }
+    //    craf.CloseReader();
+    //  now available:
+    //    craf.Replace(12, new byte[] { ...});
+    //    craf.Append("who/cares.bin", "data://baz/quux.bin", false, new byte[] { ... });
+    //  You can overwrite the original file here, it's no longer locked since CloseReader()
+    //    await craf.SaveAsync("path/to/new/autoexternal.earc", progress);
+    //  progress gets updated with file ID after each file's body is written
 
     //              struct HEADER {
     //  /* 00 */        char magic[4]; // 'C','R','A','F'
@@ -41,8 +90,28 @@ namespace ffxvDitherPatch
     //              }   // sizeof(FILEENTRY) = 0x28
 
 
+    internal static class Extensions
+    {
+        public static string ReadNullTerminatedString(this BinaryReader reader)
+        {
+            var sb = new StringBuilder();
+            char lastRead;
+            while ((int)(lastRead = reader.ReadChar()) != 0)
+            {
+                sb.Append(lastRead);
+            }
+            return sb.ToString();
+        }
 
-    class Craf
+        public static void WriteNullTerminatedString(this BinaryWriter writer, string str)
+        {
+            byte[] bstr = Encoding.ASCII.GetBytes(str);
+            writer.Write(bstr);
+            writer.Write('\0');
+        }
+    }
+
+    public class CrafArchive
     {
         private class CrafEntry
         {
@@ -90,16 +159,16 @@ namespace ffxvDitherPatch
         private FileStream _inputStream;
         private bool _loaded;
 
-        private Craf() { }
+        private CrafArchive() { }
 
-        ~Craf()
+        ~CrafArchive()
         {
             if (_inputStream != null) _inputStream.Close();
         }
 
-        public static Craf Open(string Path)
+        public static CrafArchive Open(string Path)
         {
-            var result = new Craf();
+            var result = new CrafArchive();
             result._loaded = false;
             result._inputStream = File.OpenRead(Path);
             result.ReadMetadata();
@@ -224,7 +293,7 @@ namespace ffxvDitherPatch
                 for (var i = 0; i < Count(); i++)
                 {
                     LoadEntry(i);
-                    progress.Report(i+1);
+                    progress.Report(i + 1);
                 }
                 _loaded = true;
             });
@@ -424,7 +493,7 @@ namespace ffxvDitherPatch
                             // files should not directly follow one another
                             file.Seek(1, SeekOrigin.Current);
 
-                            progress.Report(i+1);
+                            progress.Report(i + 1);
                         }
                         // original files are padded at the end
                         if (AlignTo(file.Position, 0x200) != file.Position)

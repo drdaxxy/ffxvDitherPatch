@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXBCChecksum", "DXBCChecksu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChecksumFix", "ChecksumFix\ChecksumFix.csproj", "{31AF8896-B620-4B65-BD1F-EDC52F279E64}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Craf", "Craf\Craf.csproj", "{AB4E95A3-DA9A-4954-ABE2-43EABBF37296}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,6 +29,10 @@ Global
 		{31AF8896-B620-4B65-BD1F-EDC52F279E64}.Debug|x64.Build.0 = Debug|x64
 		{31AF8896-B620-4B65-BD1F-EDC52F279E64}.Release|x64.ActiveCfg = Release|x64
 		{31AF8896-B620-4B65-BD1F-EDC52F279E64}.Release|x64.Build.0 = Release|x64
+		{AB4E95A3-DA9A-4954-ABE2-43EABBF37296}.Debug|x64.ActiveCfg = Debug|x64
+		{AB4E95A3-DA9A-4954-ABE2-43EABBF37296}.Debug|x64.Build.0 = Debug|x64
+		{AB4E95A3-DA9A-4954-ABE2-43EABBF37296}.Release|x64.ActiveCfg = Release|x64
+		{AB4E95A3-DA9A-4954-ABE2-43EABBF37296}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
