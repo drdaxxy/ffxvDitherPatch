@@ -320,6 +320,14 @@ namespace Craf
             });
         }
 
+        public int IndexOfDiskPath(string path)
+        {
+            return _files.FindIndex((entry) =>
+            {
+                return entry.path == path;
+            });
+        }
+
         public void Replace(int id, byte[] content)
         {
             if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to modify CRAF entry out of bounds");
