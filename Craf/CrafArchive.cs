@@ -392,6 +392,13 @@ namespace Craf
             return vfsPath.Substring(vfsPath.LastIndexOfAny("/\\".ToCharArray()) + 1);
         }
 
+        public string DiskPath(int id)
+        {
+            if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
+
+            return _files[id].path;
+        }
+
         public byte[] Get(int id)
         {
             if (id < 0 || id > _files.Count - 1) throw new Exception("Tried to read CRAF entry out of bounds");
