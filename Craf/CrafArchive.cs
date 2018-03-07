@@ -35,6 +35,7 @@ namespace Craf
 
     // Signedness is down to what happened to be convenient. I don't know whether
     // the game uses signed or unsigned arithmetic for any of these fields.
+    // Except for encryption, where it actually matters.
 
     // I do not know whether the game requires files of a certain size to be compressed or uncompressed.
 
@@ -66,27 +67,29 @@ namespace Craf
     //              struct HEADER {
     //  /* 00 */        char magic[4]; // 'C','R','A','F'
     //  /* 04 */        ushort minorVersion;
-    //  /* 06 */        ushort majorVersion;
+    //  /* 06 */        char majorVersion;
+    //  /* 07 */        char encrypted; // 0x80 = yes
     //  /* 08 */        int fileCount;
     //  /* 0C */        uint unk0;
     //  /* 10 */        uint firstEntryOffset;
     //  /* 14 */        uint firstVfsPathOffset;
     //  /* 18 */        uint firstPathOffset;
-    //  /* 1C */        uint firstDataOffset;
-    //  /* 20 */        char unk1[32];
+    //  /* 1C */        uint firstDataOffset; // yeah, they're assuming this is always within the first 32 bit
+    //  /* 20 */        char unk1[8];
+    //  /* 28 */        int64 archiveKey;
+    //  /* 30 */        char unk2[16];
     //              }   // sizeof(HEADER) = 0x40
 
     //              struct FILEENTRY {
-    //  /* 00 */        uint unk0;
-    //  /* 04 */        uint unk1;
+    //  /* 00 */        int64 fileKey;
     //  /* 08 */        int uncompressedSize;
     //  /* 0C */        int totalCompressedSize; // including chunk headers
     //  /* 10 */        uint flags; // 2 = compressed
     //  /* 14 */        uint vfsPathOffset;
-    //  /* 18 */        uint dataOffset;
-    //  /* 1C */        uint unk2;
+    //  /* 18 */        int64 dataOffset;
     //  /* 20 */        uint pathOffset;
-    //  /* 24 */        uint unk3;
+    //  /* 24 */        ushort unk0;
+    //  /* 26 */        ushort chunkKey;
     //              }   // sizeof(FILEENTRY) = 0x28
 
 
@@ -115,10 +118,7 @@ namespace Craf
     {
         private class CrafEntry
         {
-            public uint unk0;
-            public uint unk1;
-            public uint unk2;
-            public uint unk3;
+            public ushort unk0;
 
             public int uncompressedSize;
             public int totalCompressedSize;
@@ -131,8 +131,11 @@ namespace Craf
             public CrafChunk[] chunks; // if compressed
             public byte[] data;        // if uncompressed
 
+            public Int64 entryKey;
+            public ushort chunkKey;
+
             // Only used before load and for writing
-            public uint dataOffset;
+            public Int64 dataOffset;
 
             // Only used for writing
             public uint vfsPathOffset;
@@ -144,15 +147,25 @@ namespace Craf
             public int uncompressedSize;
 
             public byte[] compressedData;
+
+            public Int64 chunkKey;
         }
 
         public const int ChunkSize = 0x200000;
+        public const Int64 MasterArchiveKey = unchecked((Int64)0xCBF29CE484222325);
+        public const Int64 MasterEntryKey = unchecked((Int64)0x100000001B3);
+        public const Int64 MasterChunkKey1 = unchecked((Int64)0x10E64D70C2A29A69);
+        public const Int64 MasterChunkKey2 = unchecked((Int64)0xC63D3dC167E);
 
-        private ushort _versionMajor;
+        private byte _versionMajor;
         private ushort _versionMinor;
+        private byte _useEncryption;
 
         private uint _unk0;
         private byte[] _unk1;
+        private byte[] _unk2;
+
+        private Int64 _archiveKey;
 
         private List<CrafEntry> _files;
 
@@ -165,6 +178,8 @@ namespace Craf
         {
             if (_inputStream != null) _inputStream.Close();
         }
+
+        public bool MetadataEncrypted { get { return _useEncryption == 0x80; } }
 
         public static CrafArchive Open(string Path)
         {
@@ -184,7 +199,8 @@ namespace Craf
             {
                 _inputStream.Seek(4, SeekOrigin.Begin);
                 _versionMinor = bin.ReadUInt16();
-                _versionMajor = bin.ReadUInt16();
+                _versionMajor = bin.ReadByte();
+                _useEncryption = bin.ReadByte();
                 var fileCount = bin.ReadInt32();
                 _files = new List<CrafEntry>(fileCount);
                 _unk0 = bin.ReadUInt32();
@@ -192,23 +208,26 @@ namespace Craf
                 uint firstEntryOffset = bin.ReadUInt32();
 
                 _inputStream.Seek(0x20, SeekOrigin.Begin);
-                _unk1 = bin.ReadBytes(32);
+                _unk1 = bin.ReadBytes(8);
+                _archiveKey = bin.ReadInt64();
+                _unk2 = bin.ReadBytes(16);
+
+                Int64 rollingKey = MasterArchiveKey ^ _archiveKey;
 
                 _inputStream.Seek(firstEntryOffset, SeekOrigin.Begin);
 
                 for (var i = 0; i < fileCount; i++)
                 {
                     var entry = new CrafEntry();
-                    entry.unk0 = bin.ReadUInt32();
-                    entry.unk1 = bin.ReadUInt32();
+                    entry.entryKey = bin.ReadInt64();
                     entry.uncompressedSize = bin.ReadInt32();
                     entry.totalCompressedSize = bin.ReadInt32();
                     entry.flags = bin.ReadUInt32();
                     uint vfsPathOffset = bin.ReadUInt32();
-                    entry.dataOffset = bin.ReadUInt32();
-                    entry.unk2 = bin.ReadUInt32();
+                    entry.dataOffset = bin.ReadInt64();
                     uint pathOffset = bin.ReadUInt32();
-                    entry.unk3 = bin.ReadUInt32();
+                    entry.unk0 = bin.ReadUInt16();
+                    entry.chunkKey = bin.ReadUInt16();
 
                     long entryEnd = _inputStream.Position;
                     _inputStream.Seek(vfsPathOffset, SeekOrigin.Begin);
@@ -217,6 +236,19 @@ namespace Craf
                     entry.path = bin.ReadNullTerminatedString();
                     _inputStream.Seek(entryEnd, SeekOrigin.Begin);
                     _files.Add(entry);
+
+                    if (MetadataEncrypted)
+                    {
+                        Int64 fileSizeKey = (rollingKey * MasterEntryKey) ^ entry.entryKey;
+                        int uncompressedSizeKey = (int)(fileSizeKey >> 32);
+                        int compressedSizeKey = (int)(fileSizeKey & 0xFFFFFFFF);
+                        entry.uncompressedSize ^= uncompressedSizeKey;
+                        entry.totalCompressedSize ^= compressedSizeKey;
+                        Int64 dataOffsetKey = (fileSizeKey * MasterEntryKey) ^ ~(entry.entryKey);
+                        entry.dataOffset ^= dataOffsetKey;
+
+                        rollingKey = dataOffsetKey;
+                    }
                 }
             }
         }
@@ -271,6 +303,14 @@ namespace Craf
                         _files[id].chunks[j] = new CrafChunk();
                         var compressedSize = bin.ReadInt32();
                         _files[id].chunks[j].uncompressedSize = bin.ReadInt32();
+                        if (MetadataEncrypted)
+                        {
+                            Int64 chunkKey = (MasterChunkKey1 * _files[id].chunkKey) + MasterChunkKey2;
+                            int compressedSizeKey = (int)(chunkKey >> 32);
+                            int uncompressedSizeKey = (int)(chunkKey & 0xFFFFFFFF);
+                            compressedSize ^= compressedSizeKey;
+                            _files[id].chunks[j].uncompressedSize ^= uncompressedSizeKey;
+                        }
                         _files[id].chunks[j].compressedData = bin.ReadBytes(compressedSize);
                     }
                 }
@@ -527,7 +567,7 @@ namespace Craf
                         file.Seek(firstEntryOffset, SeekOrigin.Begin);
                         for (var i = 0; i < _files.Count; i++)
                         {
-                            bin.Write(_files[i].unk0);
+                            /*bin.Write(_files[i].unk0);
                             bin.Write(_files[i].unk1);
                             bin.Write(_files[i].uncompressedSize);
                             bin.Write(_files[i].totalCompressedSize);
@@ -536,7 +576,7 @@ namespace Craf
                             bin.Write(_files[i].dataOffset);
                             bin.Write(_files[i].unk2);
                             bin.Write(_files[i].pathOffset);
-                            bin.Write(_files[i].unk3);
+                            bin.Write(_files[i].unk3);*/
                         }
                     }
                 }
