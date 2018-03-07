@@ -147,8 +147,6 @@ namespace Craf
             public int uncompressedSize;
 
             public byte[] compressedData;
-
-            public Int64 chunkKey;
         }
 
         public const int ChunkSize = 0x20000;
