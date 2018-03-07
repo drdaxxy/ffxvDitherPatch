@@ -12,7 +12,6 @@
 // OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-using Ionic.Zlib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using zlib;
 
 namespace Craf
 {
@@ -392,17 +392,14 @@ namespace Craf
                     _files[id].chunks[j].uncompressedSize = chunkUncompressedSize;
                     using (MemoryStream compressedStream = new MemoryStream())
                     {
-                        using (ZlibStream compressor = new ZlibStream(
-                            compressedStream,
-                            CompressionMode.Compress,
-                            CompressionLevel.BestCompression,
-                            true))
+                        using (ZOutputStream compressor = new ZOutputStream(compressedStream, zlibConst.Z_BEST_COMPRESSION))
                         {
                             compressor.Write(content, pos, chunkUncompressedSize);
+
+                            var chunkCompressedData = compressedStream.ToArray();
+                            _files[id].totalCompressedSize += chunkCompressedData.Length;
+                            _files[id].chunks[j].compressedData = chunkCompressedData;
                         }
-                        var chunkCompressedData = compressedStream.ToArray();
-                        _files[id].totalCompressedSize += chunkCompressedData.Length;
-                        _files[id].chunks[j].compressedData = chunkCompressedData;
                     }
                     pos += chunkUncompressedSize;
                     remaining -= chunkUncompressedSize;
@@ -455,18 +452,15 @@ namespace Craf
                     var chunkUncompressedSize = _files[id].chunks[j].uncompressedSize;
                     using (MemoryStream decompressedStream = new MemoryStream())
                     {
-                        using (ZlibStream decompressor = new ZlibStream(
-                            decompressedStream,
-                            CompressionMode.Decompress,
-                            true))
+                        using (ZOutputStream decompressor = new ZOutputStream(decompressedStream))
                         {
                             decompressor.Write(
                                 _files[id].chunks[j].compressedData,
                                 0,
                                 _files[id].chunks[j].compressedData.Length);
+                            decompressedStream.Seek(0, SeekOrigin.Begin);
+                            decompressedStream.Read(result, pos, chunkUncompressedSize);
                         }
-                        decompressedStream.Seek(0, SeekOrigin.Begin);
-                        decompressedStream.Read(result, pos, chunkUncompressedSize);
                     }
                     pos += chunkUncompressedSize;
                 }
