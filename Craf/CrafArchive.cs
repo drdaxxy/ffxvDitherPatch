@@ -92,6 +92,15 @@ namespace Craf
     //  /* 26 */        ushort chunkKey;
     //              }   // sizeof(FILEENTRY) = 0x28
 
+    // The encryption code in the game is slightly more complicated than here.
+    // The examples I've looked at have only used this parameter subset so that's
+    // all that I reversed.
+    // 
+    // These are the functions responsible for decrypting metadata in the game
+    // VAs in Steam original retail release build and search signatures:
+    // 140BCF1E0 - 48 8B C4 4C 89 48 20 4C 89 40 18 48 89 48 08 55 56 57 41 54 41 55 41 56 41 57 48 8D 68 B9 48
+    // 1488F4C80 - 48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 83 EC 30 48 8D 41 68
+
 
     internal static class Extensions
     {
