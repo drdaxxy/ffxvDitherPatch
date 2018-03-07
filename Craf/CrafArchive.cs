@@ -151,7 +151,7 @@ namespace Craf
             public Int64 chunkKey;
         }
 
-        public const int ChunkSize = 0x200000;
+        public const int ChunkSize = 0x20000;
         public const Int64 MasterArchiveKey = unchecked((Int64)0xCBF29CE484222325);
         public const Int64 MasterEntryKey = unchecked((Int64)0x100000001B3);
         public const Int64 MasterChunkKey1 = unchecked((Int64)0x10E64D70C2A29A69);
@@ -303,7 +303,7 @@ namespace Craf
                         _files[id].chunks[j] = new CrafChunk();
                         var compressedSize = bin.ReadInt32();
                         _files[id].chunks[j].uncompressedSize = bin.ReadInt32();
-                        if (MetadataEncrypted)
+                        if (MetadataEncrypted && j == 0)
                         {
                             Int64 chunkKey = (MasterChunkKey1 * _files[id].chunkKey) + MasterChunkKey2;
                             int compressedSizeKey = (int)(chunkKey >> 32);
@@ -479,6 +479,7 @@ namespace Craf
             }
         }
 
+
         public Task SaveAsync(string Path, IProgress<int> progress)
         {
             if (!_loaded) throw new Exception("Tried to save CRAF before loading data");
@@ -496,15 +497,20 @@ namespace Craf
                         bin.Write(magic);
                         bin.Write(_versionMinor);
                         bin.Write(_versionMajor);
+                        bin.Write(_useEncryption);
                         bin.Write(_files.Count);
                         bin.Write(_unk0);
                         file.Seek(0x20, SeekOrigin.Begin);
                         bin.Write(_unk1);
+                        bin.Write(_archiveKey);
+                        bin.Write(_unk2);
 
                         uint firstEntryOffset = (uint)file.Position;
 
                         file.Seek(firstEntryOffset + 0x28 * _files.Count, SeekOrigin.Begin);
                         file.Seek(AlignTo(file.Position, 16), SeekOrigin.Begin);
+                        // don't ask me why, but it's normally padded like that
+                        file.Seek(8, SeekOrigin.Current);
                         for (var i = 0; i < _files.Count; i++)
                         {
                             var vfsPathOffset = AlignTo(file.Position, 8);
@@ -533,8 +539,18 @@ namespace Craf
                             {
                                 for (var j = 0; j < _files[i].chunks.Length; j++)
                                 {
-                                    bin.Write(_files[i].chunks[j].compressedData.Length);
-                                    bin.Write(_files[i].chunks[j].uncompressedSize);
+                                    var compressedSize = _files[i].chunks[j].compressedData.Length;
+                                    var uncompressedSize = _files[i].chunks[j].uncompressedSize;
+                                    if (MetadataEncrypted && j == 0)
+                                    {
+                                        Int64 chunkKey = (MasterChunkKey1 * _files[i].chunkKey) + MasterChunkKey2;
+                                        int compressedSizeKey = (int)(chunkKey >> 32);
+                                        int uncompressedSizeKey = (int)(chunkKey & 0xFFFFFFFF);
+                                        compressedSize ^= compressedSizeKey;
+                                        uncompressedSize ^= uncompressedSizeKey;
+                                    }
+                                    bin.Write(compressedSize);
+                                    bin.Write(uncompressedSize);
                                     bin.Write(_files[i].chunks[j].compressedData);
                                 }
                                 file.Seek(dataOffset + _files[i].totalCompressedSize, SeekOrigin.Begin); // compressed files are padded;
@@ -562,21 +578,38 @@ namespace Craf
                         bin.Write(firstEntryOffset);
                         bin.Write(_files[0].vfsPathOffset);
                         bin.Write(_files[0].pathOffset);
-                        bin.Write(_files[0].dataOffset);
+                        bin.Write((int)(_files[0].dataOffset));
 
                         file.Seek(firstEntryOffset, SeekOrigin.Begin);
+                        Int64 rollingKey = MasterArchiveKey ^ _archiveKey;
                         for (var i = 0; i < _files.Count; i++)
                         {
-                            /*bin.Write(_files[i].unk0);
-                            bin.Write(_files[i].unk1);
-                            bin.Write(_files[i].uncompressedSize);
-                            bin.Write(_files[i].totalCompressedSize);
+                            var uncompressedSize = _files[i].uncompressedSize;
+                            var totalCompressedSize = _files[i].totalCompressedSize;
+                            var dataOffset = _files[i].dataOffset;
+                            var entryKey = _files[i].entryKey;
+                            if (MetadataEncrypted)
+                            {
+                                Int64 fileSizeKey = (rollingKey * MasterEntryKey) ^ entryKey;
+                                int uncompressedSizeKey = (int)(fileSizeKey >> 32);
+                                int compressedSizeKey = (int)(fileSizeKey & 0xFFFFFFFF);
+                                uncompressedSize ^= uncompressedSizeKey;
+                                totalCompressedSize ^= compressedSizeKey;
+                                Int64 dataOffsetKey = (fileSizeKey * MasterEntryKey) ^ ~(entryKey);
+                                dataOffset ^= dataOffsetKey;
+
+                                rollingKey = dataOffsetKey;
+                            }
+
+                            bin.Write(entryKey);
+                            bin.Write(uncompressedSize);
+                            bin.Write(totalCompressedSize);
                             bin.Write(_files[i].flags);
                             bin.Write(_files[i].vfsPathOffset);
-                            bin.Write(_files[i].dataOffset);
-                            bin.Write(_files[i].unk2);
+                            bin.Write(dataOffset);
                             bin.Write(_files[i].pathOffset);
-                            bin.Write(_files[i].unk3);*/
+                            bin.Write(_files[i].unk0);
+                            bin.Write(_files[i].chunkKey);
                         }
                     }
                 }
