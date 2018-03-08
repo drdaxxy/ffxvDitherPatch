@@ -29,9 +29,6 @@ namespace Craf
     // The game's reader appears to be sensitive to alignment. I'm not sure *all* alignment
     // in this code is exactly what the original archiver does, but this does seem
     // to produce equivalent alignment for the archive mentioned above.
-    // The only differences I have observed between the original and a repack with no changes
-    // (but many files Replace()d with unchanged content) are in the compressed data, due to
-    // using a different Zlib implementation.
 
     // Signedness is down to what happened to be convenient. I don't know whether
     // the game uses signed or unsigned arithmetic for any of these fields.
