@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using zlib;
+using Joveler.ZLibWrapper;
 
 namespace Craf
 {
@@ -399,7 +399,9 @@ namespace Craf
                     _files[id].chunks[j].uncompressedSize = chunkUncompressedSize;
                     using (MemoryStream compressedStream = new MemoryStream())
                     {
-                        using (ZOutputStream compressor = new ZOutputStream(compressedStream, zlibConst.Z_BEST_COMPRESSION))
+                        using (ZLibStream compressor = new ZLibStream(compressedStream,
+                                                                      CompressionMode.Compress,
+                                                                      CompressionLevel.Best))
                         {
                             compressor.Write(content, pos, chunkUncompressedSize);
 
@@ -457,16 +459,11 @@ namespace Craf
                 for (var j = 0; j < _files[id].chunks.Length; j++)
                 {
                     var chunkUncompressedSize = _files[id].chunks[j].uncompressedSize;
-                    using (MemoryStream decompressedStream = new MemoryStream())
+                    using (MemoryStream compressedDataStream = new MemoryStream(_files[id].chunks[j].compressedData))
                     {
-                        using (ZOutputStream decompressor = new ZOutputStream(decompressedStream))
+                        using (ZLibStream decompressor = new ZLibStream(compressedDataStream, CompressionMode.Decompress))
                         {
-                            decompressor.Write(
-                                _files[id].chunks[j].compressedData,
-                                0,
-                                _files[id].chunks[j].compressedData.Length);
-                            decompressedStream.Seek(0, SeekOrigin.Begin);
-                            decompressedStream.Read(result, pos, chunkUncompressedSize);
+                            decompressor.Read(result, pos, chunkUncompressedSize);
                         }
                     }
                     pos += chunkUncompressedSize;
