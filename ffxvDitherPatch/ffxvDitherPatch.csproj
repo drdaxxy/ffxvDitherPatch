@@ -115,6 +115,7 @@
     <None Include="Resources\16_crop.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\HelpDesc.rtf" />
     <None Include="Resources\off_crop.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -45,6 +45,8 @@ namespace ffxvDitherPatch
             offPic.Click += (sender, ev) => { offRadio.PerformClick(); };
 
             radioSet = new List<RadioButton> { wideRadio, mediumRadio, narrowRadio, offRadio };
+
+            helpTextBox.Rtf = Assets.HelpDesc;
         }
 
         private void radioCheck(object sender, EventArgs e)

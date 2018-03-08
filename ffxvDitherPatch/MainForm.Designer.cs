@@ -38,30 +38,31 @@
             this.versionLabel = new System.Windows.Forms.Label();
             this.divider1 = new System.Windows.Forms.Label();
             this.originalLabel = new System.Windows.Forms.Label();
-            this.originalPic = new System.Windows.Forms.PictureBox();
             this.originalDescLabel = new System.Windows.Forms.Label();
-            this.widePic = new System.Windows.Forms.PictureBox();
             this.wideRadio = new System.Windows.Forms.RadioButton();
             this.wideGroupBox = new System.Windows.Forms.GroupBox();
             this.mediumGroupBox = new System.Windows.Forms.GroupBox();
-            this.mediumPic = new System.Windows.Forms.PictureBox();
             this.mediumRadio = new System.Windows.Forms.RadioButton();
             this.narrowGroupBox = new System.Windows.Forms.GroupBox();
-            this.narrowPic = new System.Windows.Forms.PictureBox();
             this.narrowRadio = new System.Windows.Forms.RadioButton();
             this.offGroupBox = new System.Windows.Forms.GroupBox();
             this.offDescLabel = new System.Windows.Forms.Label();
-            this.offPic = new System.Windows.Forms.PictureBox();
             this.offRadio = new System.Windows.Forms.RadioButton();
-            ((System.ComponentModel.ISupportInitialize)(this.originalPic)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.widePic)).BeginInit();
+            this.helpTextBox = new System.Windows.Forms.RichTextBox();
+            this.offPic = new System.Windows.Forms.PictureBox();
+            this.narrowPic = new System.Windows.Forms.PictureBox();
+            this.mediumPic = new System.Windows.Forms.PictureBox();
+            this.widePic = new System.Windows.Forms.PictureBox();
+            this.originalPic = new System.Windows.Forms.PictureBox();
             this.wideGroupBox.SuspendLayout();
             this.mediumGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).BeginInit();
             this.narrowGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).BeginInit();
             this.offGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.widePic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.originalPic)).BeginInit();
             this.SuspendLayout();
             // 
             // progressBar
@@ -170,16 +171,6 @@
             this.originalLabel.TabIndex = 10;
             this.originalLabel.Text = "Original (16x)";
             // 
-            // originalPic
-            // 
-            this.originalPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.originalPic.Image = global::ffxvDitherPatch.Assets._16_crop;
-            this.originalPic.Location = new System.Drawing.Point(524, 128);
-            this.originalPic.Name = "originalPic";
-            this.originalPic.Size = new System.Drawing.Size(150, 110);
-            this.originalPic.TabIndex = 11;
-            this.originalPic.TabStop = false;
-            // 
             // originalDescLabel
             // 
             this.originalDescLabel.AutoSize = true;
@@ -188,16 +179,6 @@
             this.originalDescLabel.Size = new System.Drawing.Size(76, 15);
             this.originalDescLabel.TabIndex = 12;
             this.originalDescLabel.Text = "For reference";
-            // 
-            // widePic
-            // 
-            this.widePic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.widePic.Image = global::ffxvDitherPatch.Assets._32_crop;
-            this.widePic.Location = new System.Drawing.Point(160, 16);
-            this.widePic.Name = "widePic";
-            this.widePic.Size = new System.Drawing.Size(150, 110);
-            this.widePic.TabIndex = 33;
-            this.widePic.TabStop = false;
             // 
             // wideRadio
             // 
@@ -234,16 +215,6 @@
             this.mediumGroupBox.TabStop = false;
             this.mediumGroupBox.Text = "Medium (40x)";
             // 
-            // mediumPic
-            // 
-            this.mediumPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.mediumPic.Image = global::ffxvDitherPatch.Assets._40_crop;
-            this.mediumPic.Location = new System.Drawing.Point(160, 16);
-            this.mediumPic.Name = "mediumPic";
-            this.mediumPic.Size = new System.Drawing.Size(150, 110);
-            this.mediumPic.TabIndex = 33;
-            this.mediumPic.TabStop = false;
-            // 
             // mediumRadio
             // 
             this.mediumRadio.AutoSize = true;
@@ -267,16 +238,6 @@
             this.narrowGroupBox.TabIndex = 53;
             this.narrowGroupBox.TabStop = false;
             this.narrowGroupBox.Text = "Narrow (56x)";
-            // 
-            // narrowPic
-            // 
-            this.narrowPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.narrowPic.Image = global::ffxvDitherPatch.Assets._56_crop;
-            this.narrowPic.Location = new System.Drawing.Point(160, 16);
-            this.narrowPic.Name = "narrowPic";
-            this.narrowPic.Size = new System.Drawing.Size(150, 110);
-            this.narrowPic.TabIndex = 33;
-            this.narrowPic.TabStop = false;
             // 
             // narrowRadio
             // 
@@ -312,16 +273,6 @@
             this.offDescLabel.TabIndex = 48;
             this.offDescLabel.Text = "Bad idea";
             // 
-            // offPic
-            // 
-            this.offPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.offPic.Image = global::ffxvDitherPatch.Assets.off_crop;
-            this.offPic.Location = new System.Drawing.Point(160, 16);
-            this.offPic.Name = "offPic";
-            this.offPic.Size = new System.Drawing.Size(150, 110);
-            this.offPic.TabIndex = 33;
-            this.offPic.TabStop = false;
-            // 
             // offRadio
             // 
             this.offRadio.AutoSize = true;
@@ -333,12 +284,74 @@
             this.offRadio.UseVisualStyleBackColor = true;
             this.offRadio.CheckedChanged += new System.EventHandler(this.radioCheck);
             // 
+            // helpTextBox
+            // 
+            this.helpTextBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.helpTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.helpTextBox.Location = new System.Drawing.Point(16, 192);
+            this.helpTextBox.Name = "helpTextBox";
+            this.helpTextBox.ReadOnly = true;
+            this.helpTextBox.Size = new System.Drawing.Size(496, 48);
+            this.helpTextBox.TabIndex = 55;
+            this.helpTextBox.Text = "";
+            // 
+            // offPic
+            // 
+            this.offPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.offPic.Image = global::ffxvDitherPatch.Assets.off_crop;
+            this.offPic.Location = new System.Drawing.Point(160, 16);
+            this.offPic.Name = "offPic";
+            this.offPic.Size = new System.Drawing.Size(150, 110);
+            this.offPic.TabIndex = 33;
+            this.offPic.TabStop = false;
+            // 
+            // narrowPic
+            // 
+            this.narrowPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.narrowPic.Image = global::ffxvDitherPatch.Assets._56_crop;
+            this.narrowPic.Location = new System.Drawing.Point(160, 16);
+            this.narrowPic.Name = "narrowPic";
+            this.narrowPic.Size = new System.Drawing.Size(150, 110);
+            this.narrowPic.TabIndex = 33;
+            this.narrowPic.TabStop = false;
+            // 
+            // mediumPic
+            // 
+            this.mediumPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.mediumPic.Image = global::ffxvDitherPatch.Assets._40_crop;
+            this.mediumPic.Location = new System.Drawing.Point(160, 16);
+            this.mediumPic.Name = "mediumPic";
+            this.mediumPic.Size = new System.Drawing.Size(150, 110);
+            this.mediumPic.TabIndex = 33;
+            this.mediumPic.TabStop = false;
+            // 
+            // widePic
+            // 
+            this.widePic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.widePic.Image = global::ffxvDitherPatch.Assets._32_crop;
+            this.widePic.Location = new System.Drawing.Point(160, 16);
+            this.widePic.Name = "widePic";
+            this.widePic.Size = new System.Drawing.Size(150, 110);
+            this.widePic.TabIndex = 33;
+            this.widePic.TabStop = false;
+            // 
+            // originalPic
+            // 
+            this.originalPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.originalPic.Image = global::ffxvDitherPatch.Assets._16_crop;
+            this.originalPic.Location = new System.Drawing.Point(524, 128);
+            this.originalPic.Name = "originalPic";
+            this.originalPic.Size = new System.Drawing.Size(150, 110);
+            this.originalPic.TabIndex = 11;
+            this.originalPic.TabStop = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(704, 545);
+            this.Controls.Add(this.helpTextBox);
             this.Controls.Add(this.offGroupBox);
             this.Controls.Add(this.narrowGroupBox);
             this.Controls.Add(this.mediumGroupBox);
@@ -362,19 +375,19 @@
             this.Name = "MainForm";
             this.Text = "ffxvDitherPatch";
             this.Load += new System.EventHandler(this.MainForm_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.originalPic)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.widePic)).EndInit();
             this.wideGroupBox.ResumeLayout(false);
             this.wideGroupBox.PerformLayout();
             this.mediumGroupBox.ResumeLayout(false);
             this.mediumGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).EndInit();
             this.narrowGroupBox.ResumeLayout(false);
             this.narrowGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).EndInit();
             this.offGroupBox.ResumeLayout(false);
             this.offGroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.widePic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.originalPic)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -407,6 +420,7 @@
         private System.Windows.Forms.PictureBox offPic;
         private System.Windows.Forms.RadioButton offRadio;
         private System.Windows.Forms.Label offDescLabel;
+        private System.Windows.Forms.RichTextBox helpTextBox;
     }
 }
 

@@ -101,6 +101,19 @@ namespace ffxvDitherPatch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1031{\fonttbl{\f0\fnil\fcharset0 Segoe UI;}{\f1\fnil\fcharset0 Calibri;}}
+        ///{\*\generator Riched20 10.0.16299}\viewkind4\uc1 
+        ///\pard\sa200\sl276\slmult1\f0\fs18\lang9 There&apos;s no performance difference between these options, pick what you like.\line\b You will likely have to reapply this patch\b0  after any game updates.\f1\fs22\par
+        ///}
+        ///.
+        /// </summary>
+        internal static string HelpDesc {
+            get {
+                return ResourceManager.GetString("HelpDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap off_crop {
