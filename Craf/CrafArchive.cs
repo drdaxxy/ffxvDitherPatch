@@ -397,19 +397,21 @@ namespace Craf
                     _files[id].chunks[j] = new CrafChunk();
                     var chunkUncompressedSize = Math.Min(ChunkSize, remaining);
                     _files[id].chunks[j].uncompressedSize = chunkUncompressedSize;
+                    
                     using (MemoryStream compressedStream = new MemoryStream())
                     {
                         using (ZLibStream compressor = new ZLibStream(compressedStream,
                                                                       CompressionMode.Compress,
-                                                                      CompressionLevel.Best))
+                                                                      CompressionLevel.Best,
+                                                                      true))
                         {
                             compressor.Write(content, pos, chunkUncompressedSize);
-
-                            var chunkCompressedData = compressedStream.ToArray();
-                            _files[id].totalCompressedSize += chunkCompressedData.Length;
-                            _files[id].chunks[j].compressedData = chunkCompressedData;
                         }
+                        var chunkCompressedData = compressedStream.ToArray();
+                        _files[id].totalCompressedSize += chunkCompressedData.Length;
+                        _files[id].chunks[j].compressedData = chunkCompressedData;
                     }
+
                     pos += chunkUncompressedSize;
                     remaining -= chunkUncompressedSize;
                 }
