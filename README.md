@@ -10,6 +10,8 @@ Full screenshots: [Original (16x)](http://i.cubeupload.com/ekOLq6.png) vs [Mediu
 
 Screenshots taken with anti-aliasing disabled for clarity. This is still beneficial with temporal AA on.
 
+Official support threads: [Reddit](https://www.reddit.com/r/FFXVPCmods/comments/837931/release_narrow_those_terrain_blending_artifacts/), [Steam](http://steamcommunity.com/app/637650/discussions/0/1697167355212583021/)
+
 ---
 
 ### Release history
