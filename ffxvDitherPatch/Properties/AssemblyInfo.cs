@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ffxvDitherPatch")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("https://github.com/drdaxxy/ffxvDitherPatch")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("drdaxxy")]
 [assembly: AssemblyProduct("ffxvDitherPatch")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright © drdaxxy 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
