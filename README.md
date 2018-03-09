@@ -2,6 +2,14 @@
 
 This utility allows you to narrow that nasty terrain blending (dithering) effect in *FINAL FANTASY XV*
 
+![sbsbig](https://user-images.githubusercontent.com/40321/37212845-9cafc756-23b0-11e8-8a1d-502bdf80130e.png)
+
+![sidebyside](https://user-images.githubusercontent.com/40321/37212892-bb56e554-23b0-11e8-8a16-95f29127eda0.png)
+
+Full screenshots: [Original (16x)](http://i.cubeupload.com/ekOLq6.png) vs [Medium (40x)](http://i.cubeupload.com/qMc1GA.png)
+
+Screenshots taken with anti-aliasing disabled for clarity. This is still beneficial with temporal AA on.
+
 ---
 
 ### Release history
