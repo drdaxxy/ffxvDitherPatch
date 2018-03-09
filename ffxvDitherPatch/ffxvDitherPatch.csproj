@@ -113,7 +113,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
     <None Include="Resources\32_crop.png" />
   </ItemGroup>
   <ItemGroup>
