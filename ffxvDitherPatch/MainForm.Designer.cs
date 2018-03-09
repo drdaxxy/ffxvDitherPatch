@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.processButton = new System.Windows.Forms.Button();
             this.statusDescLabel = new System.Windows.Forms.Label();
@@ -41,27 +42,27 @@
             this.originalDescLabel = new System.Windows.Forms.Label();
             this.wideRadio = new System.Windows.Forms.RadioButton();
             this.wideGroupBox = new System.Windows.Forms.GroupBox();
+            this.widePic = new System.Windows.Forms.PictureBox();
             this.mediumGroupBox = new System.Windows.Forms.GroupBox();
+            this.mediumPic = new System.Windows.Forms.PictureBox();
             this.mediumRadio = new System.Windows.Forms.RadioButton();
             this.narrowGroupBox = new System.Windows.Forms.GroupBox();
+            this.narrowPic = new System.Windows.Forms.PictureBox();
             this.narrowRadio = new System.Windows.Forms.RadioButton();
             this.offGroupBox = new System.Windows.Forms.GroupBox();
             this.offDescLabel = new System.Windows.Forms.Label();
+            this.offPic = new System.Windows.Forms.PictureBox();
             this.offRadio = new System.Windows.Forms.RadioButton();
             this.helpTextBox = new System.Windows.Forms.RichTextBox();
-            this.offPic = new System.Windows.Forms.PictureBox();
-            this.narrowPic = new System.Windows.Forms.PictureBox();
-            this.mediumPic = new System.Windows.Forms.PictureBox();
-            this.widePic = new System.Windows.Forms.PictureBox();
             this.originalPic = new System.Windows.Forms.PictureBox();
             this.wideGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.widePic)).BeginInit();
             this.mediumGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).BeginInit();
             this.narrowGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).BeginInit();
             this.offGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.widePic)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.originalPic)).BeginInit();
             this.SuspendLayout();
             // 
@@ -203,6 +204,16 @@
             this.wideGroupBox.TabStop = false;
             this.wideGroupBox.Text = "Wide (32x)";
             // 
+            // widePic
+            // 
+            this.widePic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.widePic.Image = global::ffxvDitherPatch.Assets._32_crop;
+            this.widePic.Location = new System.Drawing.Point(160, 16);
+            this.widePic.Name = "widePic";
+            this.widePic.Size = new System.Drawing.Size(150, 110);
+            this.widePic.TabIndex = 33;
+            this.widePic.TabStop = false;
+            // 
             // mediumGroupBox
             // 
             this.mediumGroupBox.Controls.Add(this.mediumPic);
@@ -214,6 +225,16 @@
             this.mediumGroupBox.TabIndex = 52;
             this.mediumGroupBox.TabStop = false;
             this.mediumGroupBox.Text = "Medium (40x)";
+            // 
+            // mediumPic
+            // 
+            this.mediumPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.mediumPic.Image = global::ffxvDitherPatch.Assets._40_crop;
+            this.mediumPic.Location = new System.Drawing.Point(160, 16);
+            this.mediumPic.Name = "mediumPic";
+            this.mediumPic.Size = new System.Drawing.Size(150, 110);
+            this.mediumPic.TabIndex = 33;
+            this.mediumPic.TabStop = false;
             // 
             // mediumRadio
             // 
@@ -238,6 +259,16 @@
             this.narrowGroupBox.TabIndex = 53;
             this.narrowGroupBox.TabStop = false;
             this.narrowGroupBox.Text = "Narrow (56x)";
+            // 
+            // narrowPic
+            // 
+            this.narrowPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.narrowPic.Image = global::ffxvDitherPatch.Assets._56_crop;
+            this.narrowPic.Location = new System.Drawing.Point(160, 16);
+            this.narrowPic.Name = "narrowPic";
+            this.narrowPic.Size = new System.Drawing.Size(150, 110);
+            this.narrowPic.TabIndex = 33;
+            this.narrowPic.TabStop = false;
             // 
             // narrowRadio
             // 
@@ -273,6 +304,16 @@
             this.offDescLabel.TabIndex = 48;
             this.offDescLabel.Text = "Bad idea";
             // 
+            // offPic
+            // 
+            this.offPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.offPic.Image = global::ffxvDitherPatch.Assets.off_crop;
+            this.offPic.Location = new System.Drawing.Point(160, 16);
+            this.offPic.Name = "offPic";
+            this.offPic.Size = new System.Drawing.Size(150, 110);
+            this.offPic.TabIndex = 33;
+            this.offPic.TabStop = false;
+            // 
             // offRadio
             // 
             this.offRadio.AutoSize = true;
@@ -294,46 +335,6 @@
             this.helpTextBox.Size = new System.Drawing.Size(496, 48);
             this.helpTextBox.TabIndex = 55;
             this.helpTextBox.Text = "";
-            // 
-            // offPic
-            // 
-            this.offPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.offPic.Image = global::ffxvDitherPatch.Assets.off_crop;
-            this.offPic.Location = new System.Drawing.Point(160, 16);
-            this.offPic.Name = "offPic";
-            this.offPic.Size = new System.Drawing.Size(150, 110);
-            this.offPic.TabIndex = 33;
-            this.offPic.TabStop = false;
-            // 
-            // narrowPic
-            // 
-            this.narrowPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.narrowPic.Image = global::ffxvDitherPatch.Assets._56_crop;
-            this.narrowPic.Location = new System.Drawing.Point(160, 16);
-            this.narrowPic.Name = "narrowPic";
-            this.narrowPic.Size = new System.Drawing.Size(150, 110);
-            this.narrowPic.TabIndex = 33;
-            this.narrowPic.TabStop = false;
-            // 
-            // mediumPic
-            // 
-            this.mediumPic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.mediumPic.Image = global::ffxvDitherPatch.Assets._40_crop;
-            this.mediumPic.Location = new System.Drawing.Point(160, 16);
-            this.mediumPic.Name = "mediumPic";
-            this.mediumPic.Size = new System.Drawing.Size(150, 110);
-            this.mediumPic.TabIndex = 33;
-            this.mediumPic.TabStop = false;
-            // 
-            // widePic
-            // 
-            this.widePic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.widePic.Image = global::ffxvDitherPatch.Assets._32_crop;
-            this.widePic.Location = new System.Drawing.Point(160, 16);
-            this.widePic.Name = "widePic";
-            this.widePic.Size = new System.Drawing.Size(150, 110);
-            this.widePic.TabIndex = 33;
-            this.widePic.TabStop = false;
             // 
             // originalPic
             // 
@@ -370,6 +371,7 @@
             this.Controls.Add(this.progressBar);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MaximizeBox = false;
             this.Name = "MainForm";
@@ -377,16 +379,16 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.wideGroupBox.ResumeLayout(false);
             this.wideGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.widePic)).EndInit();
             this.mediumGroupBox.ResumeLayout(false);
             this.mediumGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).EndInit();
             this.narrowGroupBox.ResumeLayout(false);
             this.narrowGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).EndInit();
             this.offGroupBox.ResumeLayout(false);
             this.offGroupBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.offPic)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.narrowPic)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.mediumPic)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.widePic)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.originalPic)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
