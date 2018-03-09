@@ -102,6 +102,14 @@ namespace ffxvDitherPatch
                     var id = _candidateIds[i];
                     var binary = _archive.Get(id);
 
+                    var disassembly = D3DCompiler.Disassemble(binary);
+                    if (disassembly.Contains("FP_FadePower"))
+                    {
+                        // actor - patching these causes glitches with camera-overlap fade
+                        progress.Report(i + 1);
+                        continue;
+                    }
+
                     bool found = false;
                     byte[] newBinary = (byte[])binary.Clone();
 
