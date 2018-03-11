@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Joveler.ZLibWrapper;
+using System.Security.Cryptography;
 
 namespace Craf
 {
@@ -72,15 +73,16 @@ namespace Craf
     //  /* 14 */        uint firstVfsPathOffset;
     //  /* 18 */        uint firstPathOffset;
     //  /* 1C */        uint firstDataOffset; // yeah, they're assuming this is always within the first 32 bit
-    //  /* 20 */        char unk1[8];
+    //  /* 20 */        uint flags;
+    //  /* 24 */        char unk1[4];
     //  /* 28 */        int64 archiveKey;
     //  /* 30 */        char unk2[16];
     //              }   // sizeof(HEADER) = 0x40
 
     //              struct FILEENTRY {
     //  /* 00 */        int64 fileKey;
-    //  /* 08 */        int uncompressedSize;
-    //  /* 0C */        int totalCompressedSize; // including chunk headers
+    //  /* 08 */        int uncompressedSize; // no padding!
+    //  /* 0C */        int totalCompressedSize; // including chunk headers / size of ENCRYPTEDFILE
     //  /* 10 */        uint flags; // 2 = compressed
     //  /* 14 */        uint vfsPathOffset;
     //  /* 18 */        int64 dataOffset;
@@ -88,6 +90,13 @@ namespace Craf
     //  /* 24 */        ushort unk0;
     //  /* 26 */        ushort chunkKey;
     //              }   // sizeof(FILEENTRY) = 0x28
+
+    //              struct ENCRYPTEDFILE {
+    //                  char data[]; // padded to 16 bytes with zeroes
+    //                  char iv[16];
+    //                  char unk[17]; // 16 0's followed by 1
+    //              }
+
 
     // The encryption code in the game is slightly more complicated than here.
     // The examples I've looked at have only used this parameter subset so that's
@@ -97,6 +106,7 @@ namespace Craf
     // VAs in Steam original retail release build and search signatures:
     // 140BCF1E0 - 48 8B C4 4C 89 48 20 4C 89 40 18 48 89 48 08 55 56 57 41 54 41 55 41 56 41 57 48 8D 68 B9 48
     // 1488F4C80 - 48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 83 EC 30 48 8D 41 68
+    // 142C77080 - 40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 E1 48 ?? ?? ?? ?? ?? ?? 48 ?? ?? ?? ?? ?? ?? ?? 4C 8B F1 80 79 08 00
 
 
     internal static class Extensions
@@ -120,6 +130,16 @@ namespace Craf
         }
     }
 
+    internal class ReuseCryptoStream : CryptoStream
+    {
+        public ReuseCryptoStream(Stream stream, ICryptoTransform transform, CryptoStreamMode mode) : base(stream, transform, mode) { }
+        protected override void Dispose(bool disposing)
+        {
+            if (!HasFlushedFinalBlock) FlushFinalBlock();
+            base.Dispose(false);
+        }
+    }
+
     public class CrafArchive
     {
         private class CrafEntry
@@ -131,11 +151,13 @@ namespace Craf
             public uint flags;
 
             public bool UseCompression { get { return (flags & 2) != 0; } }
+            public bool UseDataEncryption { get { return (flags & 0x40) != 0; } }
 
             public string path;
             public string vfsPath;
             public CrafChunk[] chunks; // if compressed
             public byte[] data;        // if uncompressed
+            public byte[] IV;          // if encrypted
 
             public Int64 entryKey;
             public ushort chunkKey;
@@ -156,14 +178,17 @@ namespace Craf
         }
 
         public const int ChunkSize = 0x20000;
-        public const Int64 MasterArchiveKey = unchecked((Int64)0xCBF29CE484222325);
+        public const Int64 MasterArchiveKey1 = unchecked((Int64)0xCBF29CE484222325);
+        public const Int64 MasterArchiveKey2 = unchecked((Int64)0x40D4CCA269811DAF);
         public const Int64 MasterEntryKey = unchecked((Int64)0x100000001B3);
         public const Int64 MasterChunkKey1 = unchecked((Int64)0x10E64D70C2A29A69);
         public const Int64 MasterChunkKey2 = unchecked((Int64)0xC63D3dC167E);
+        public readonly byte[] AESKey = new byte[] { 0x9C, 0x6C, 0x5D, 0x41, 0x15, 0x52, 0x3F, 0x17, 0x5A, 0xD3, 0xF8, 0xB7, 0x75, 0x58, 0x1E, 0xCF };
 
         private byte _versionMajor;
         private ushort _versionMinor;
-        private byte _useEncryption;
+        private byte _metadataEncryption; // probably not the actual indicator
+        private uint _flags;
 
         private uint _unk0;
         private byte[] _unk1;
@@ -175,6 +200,7 @@ namespace Craf
 
         private FileStream _inputStream;
         private bool _loaded;
+        private Aes _aes;
 
         private CrafArchive() { }
 
@@ -183,13 +209,33 @@ namespace Craf
             if (_inputStream != null) _inputStream.Close();
         }
 
-        public bool MetadataEncrypted { get { return _useEncryption == 0x80; } }
+        public bool MetadataEncrypted { get { return _metadataEncryption == 0x80; } }
+
+        public Int64 MasterArchiveKey
+        {
+            get
+            {
+                if ((_flags & 8) != 0)
+                {
+                    return MasterArchiveKey2;
+                }
+                else
+                {
+                    return MasterArchiveKey1;
+                }
+            }
+        }
 
         public static CrafArchive Open(string Path)
         {
             var result = new CrafArchive();
             result._loaded = false;
             result._inputStream = File.OpenRead(Path);
+
+            result._aes = Aes.Create();
+            result._aes.Mode = CipherMode.CBC;
+            result._aes.Padding = PaddingMode.Zeros;
+
             result.ReadMetadata();
 
             return result;
@@ -204,7 +250,7 @@ namespace Craf
                 _inputStream.Seek(4, SeekOrigin.Begin);
                 _versionMinor = bin.ReadUInt16();
                 _versionMajor = bin.ReadByte();
-                _useEncryption = bin.ReadByte();
+                _metadataEncryption = bin.ReadByte();
                 var fileCount = bin.ReadInt32();
                 _files = new List<CrafEntry>(fileCount);
                 _unk0 = bin.ReadUInt32();
@@ -212,7 +258,8 @@ namespace Craf
                 uint firstEntryOffset = bin.ReadUInt32();
 
                 _inputStream.Seek(0x20, SeekOrigin.Begin);
-                _unk1 = bin.ReadBytes(8);
+                _flags = bin.ReadUInt32();
+                _unk1 = bin.ReadBytes(4);
                 _archiveKey = bin.ReadInt64();
                 _unk2 = bin.ReadBytes(16);
 
@@ -252,6 +299,14 @@ namespace Craf
                         entry.dataOffset ^= dataOffsetKey;
 
                         rollingKey = dataOffsetKey;
+                    }
+
+                    if (entry.UseDataEncryption)
+                    {
+                        var pos = _inputStream.Position;
+                        _inputStream.Seek(entry.dataOffset + entry.totalCompressedSize - 0x21, SeekOrigin.Begin);
+                        entry.IV = bin.ReadBytes(16);
+                        _inputStream.Seek(pos, SeekOrigin.Begin);
                     }
                 }
             }
@@ -316,6 +371,15 @@ namespace Craf
                             _files[id].chunks[j].uncompressedSize ^= uncompressedSizeKey;
                         }
                         _files[id].chunks[j].compressedData = bin.ReadBytes(compressedSize);
+                    }
+                }
+                else if (_files[id].UseDataEncryption)
+                {
+                    var decryptor = _aes.CreateDecryptor(AESKey, _files[id].IV);
+                    using (var decryptorStream = new ReuseCryptoStream(_inputStream, decryptor, CryptoStreamMode.Read))
+                    {
+                        _files[id].data = new byte[_files[id].uncompressedSize];
+                        decryptorStream.Read(_files[id].data, 0, _files[id].uncompressedSize);
                     }
                 }
                 else
@@ -417,7 +481,15 @@ namespace Craf
             }
             else
             {
-                _files[id].totalCompressedSize = uncompressedSize;
+                if (_files[id].UseDataEncryption)
+                {
+                    // align to AES blocks + IV + static 17 byte padding
+                    _files[id].totalCompressedSize = AlignTo(_files[id].uncompressedSize, 0x10) + 0x11;
+                }
+                else
+                {
+                    _files[id].totalCompressedSize = uncompressedSize;
+                }
                 _files[id].data = content;
             }
         }
@@ -494,10 +566,11 @@ namespace Craf
                         bin.Write(magic);
                         bin.Write(_versionMinor);
                         bin.Write(_versionMajor);
-                        bin.Write(_useEncryption);
+                        bin.Write(_metadataEncryption);
                         bin.Write(_files.Count);
                         bin.Write(_unk0);
                         file.Seek(0x20, SeekOrigin.Begin);
+                        bin.Write(_flags);
                         bin.Write(_unk1);
                         bin.Write(_archiveKey);
                         bin.Write(_unk2);
@@ -551,6 +624,17 @@ namespace Craf
                                     bin.Write(_files[i].chunks[j].compressedData);
                                 }
                                 file.Seek(dataOffset + _files[i].totalCompressedSize, SeekOrigin.Begin); // compressed files are padded;
+                            }
+                            else if (_files[i].UseDataEncryption)
+                            {
+                                var encryptor = _aes.CreateEncryptor(AESKey, _files[i].IV);
+                                using (var encryptorStream = new ReuseCryptoStream(file, encryptor, CryptoStreamMode.Write))
+                                {
+                                    encryptorStream.Write(_files[i].data, 0, _files[i].data.Length);
+                                }
+                                bin.Write(_files[i].IV);
+                                for (var j = 0; j < 16; j++) bin.Write((byte)0x00);
+                                bin.Write((byte)0x01);
                             }
                             else
                             {
